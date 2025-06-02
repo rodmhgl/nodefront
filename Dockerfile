@@ -5,7 +5,8 @@ FROM python:3.11-alpine
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    FLASK_ENV=production
 
 # Set working directory
 WORKDIR /app
@@ -28,12 +29,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Remove build dependencies to reduce image size
 RUN apk del gcc musl-dev linux-headers
 
-# Copy application code
-COPY ./src/app.py ./
+# Copy application code and configuration
+COPY src/app.py ./
+COPY src/gunicorn.conf.py ./
 
 # Create necessary directories
-RUN mkdir -p /app/share /mnt/secret-store && \
-    chown -R appuser:appuser /app
+RUN mkdir -p /app/share /mnt/secret-store /tmp && \
+    chown -R appuser:appuser /app /tmp
 
 # Switch to non-root user
 USER appuser
@@ -41,9 +43,9 @@ USER appuser
 # Expose port
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+# Health check using production server
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:3000/healthcheck.html?probe=docker', timeout=2)"
 
-# Start the application
-CMD ["python", "app.py"]
+# Use Gunicorn for production
+CMD ["gunicorn", "--config", "gunicorn.conf.py", "app:app"]# Use official Python runtime based on Alpine Linux

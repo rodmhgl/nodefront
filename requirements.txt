@@ -1,15 +1,17 @@
 # Flask Environment Display Application Dependencies
-# Minimal dependencies for production deployment
+# Production-ready dependencies
 
 # Web Framework
 Flask==3.0.0
 Werkzeug==3.0.1
 
+# Production WSGI Server
+gunicorn==21.2.0
+
 # System Information
 psutil==5.9.6
 
 # Optional: Development dependencies (uncomment for local development)
-# gunicorn==21.2.0        # WSGI server for production
 # flask-cors==4.0.0       # CORS support if needed
 # pytest==7.4.3          # Testing framework
 # pytest-flask==1.3.0    # Flask testing utilities

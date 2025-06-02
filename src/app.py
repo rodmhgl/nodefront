@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Kubernetes Environment Display Application - Flask Version
-A simple Flask web application for displaying Kubernetes environment information
+Production-Ready Flask Application
+Updated version that works properly in production environments
 """
 
 import os
@@ -18,19 +18,40 @@ import logging
 from flask import Flask, request, jsonify, render_template_string
 import psutil
 
-# Configure logging
+# Configure production-ready logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler('/tmp/app.log') if os.path.exists('/tmp') else logging.NullHandler()
+    ]
 )
 logger = logging.getLogger(__name__)
 
-# Initialize Flask app
+# Initialize Flask app with production settings
 app = Flask(__name__)
-app.config['JSON_SORT_KEYS'] = False
+app.config.update(
+    JSON_SORT_KEYS=False,
+    # Production security settings
+    SECRET_KEY=os.environ.get('SECRET_KEY', os.urandom(32)),
+    # Disable debug mode in production
+    DEBUG=False,
+    # Production JSON settings
+    JSONIFY_PRETTYPRINT_REGULAR=False
+)
 
 # Application start time for uptime calculation
 START_TIME = time.time()
+
+def is_production():
+    """Detect if running in production environment"""
+    return (
+        os.environ.get('FLASK_ENV') == 'production' or
+        os.environ.get('ENVIRONMENT') == 'production' or
+        'gunicorn' in os.environ.get('SERVER_SOFTWARE', '') or
+        'uwsgi' in os.environ.get('SERVER_SOFTWARE', '')
+    )
 
 def safe_read_file(file_path):
     """Safely read file contents"""
@@ -40,6 +61,7 @@ def safe_read_file(file_path):
             return path.read_text(encoding='utf-8').strip()
         return 'File not found'
     except Exception as e:
+        logger.warning(f"Error reading file {file_path}: {e}")
         return f'Error reading file: {str(e)}'
 
 def safe_read_dir(dir_path):
@@ -50,6 +72,7 @@ def safe_read_dir(dir_path):
             return [item.name for item in path.iterdir()]
         return []
     except Exception as e:
+        logger.warning(f"Error reading directory {dir_path}: {e}")
         return [f'Error reading directory: {str(e)}']
 
 def get_memory_info():
@@ -62,7 +85,8 @@ def get_memory_info():
             'used': round(memory.used / 1024 / 1024),
             'percent': memory.percent
         }
-    except Exception:
+    except Exception as e:
+        logger.error(f"Error getting memory info: {e}")
         return {'total': 0, 'available': 0, 'used': 0, 'percent': 0}
 
 def get_cpu_info():
@@ -73,7 +97,8 @@ def get_cpu_info():
             'percent': psutil.cpu_percent(interval=1),
             'load_avg': os.getloadavg() if hasattr(os, 'getloadavg') else [0, 0, 0]
         }
-    except Exception:
+    except Exception as e:
+        logger.error(f"Error getting CPU info: {e}")
         return {'count': 1, 'percent': 0, 'load_avg': [0, 0, 0]}
 
 def get_process_info():
@@ -86,34 +111,42 @@ def get_process_info():
             'memory_percent': round(process.memory_percent(), 2),
             'cpu_percent': round(process.cpu_percent(), 2),
             'create_time': datetime.fromtimestamp(process.create_time()).isoformat(),
-            'uptime': round(time.time() - START_TIME, 2)
+            'uptime': round(time.time() - START_TIME, 2),
+            'num_threads': process.num_threads()
         }
-    except Exception:
+    except Exception as e:
+        logger.error(f"Error getting process info: {e}")
         return {
             'pid': os.getpid(),
             'ppid': os.getppid(),
             'memory_percent': 0,
             'cpu_percent': 0,
             'create_time': datetime.now().isoformat(),
-            'uptime': round(time.time() - START_TIME, 2)
+            'uptime': round(time.time() - START_TIME, 2),
+            'num_threads': 1
         }
+
+def get_server_info():
+    """Get production server information"""
+    return {
+        'server_software': os.environ.get('SERVER_SOFTWARE', 'Unknown'),
+        'wsgi_server': 'gunicorn' if 'gunicorn' in os.environ.get('SERVER_SOFTWARE', '') else 'development',
+        'is_production': is_production(),
+        'flask_env': os.environ.get('FLASK_ENV', 'development'),
+        'debug_mode': app.debug,
+        'worker_pid': os.getpid(),
+        'worker_ppid': os.getppid()
+    }
 
 def adjust_color(color, amount):
     """Adjust color brightness"""
     try:
-        # Remove # if present
         color = color.lstrip('#')
-        
-        # Convert to RGB
         rgb = tuple(int(color[i:i+2], 16) for i in (0, 2, 4))
-        
-        # Adjust brightness
         adjusted = []
         for c in rgb:
             new_c = c + amount
             adjusted.append(max(0, min(255, new_c)))
-        
-        # Convert back to hex
         return f"#{adjusted[0]:02x}{adjusted[1]:02x}{adjusted[2]:02x}"
     except Exception:
         return color
@@ -123,6 +156,7 @@ def get_environment_info():
     memory_info = get_memory_info()
     cpu_info = get_cpu_info()
     process_info = get_process_info()
+    server_info = get_server_info()
     
     # Collect environment variables (hide sensitive ones)
     env_vars = {}
@@ -149,6 +183,7 @@ def get_environment_info():
             'pid': process_info['pid'],
             'ppid': process_info['ppid']
         },
+        'server': server_info,
         'system': {
             'hostname': socket.gethostname(),
             'cpu_count': cpu_info['count'],
@@ -173,6 +208,7 @@ def health_check():
     probe = request.args.get('probe', 'unknown')
     timestamp = datetime.now().isoformat()
     process_info = get_process_info()
+    server_info = get_server_info()
     
     health_status = {
         'status': 'healthy',
@@ -180,7 +216,8 @@ def health_check():
         'timestamp': timestamp,
         'uptime': process_info['uptime'],
         'memory_usage': f"{get_memory_info()['percent']:.1f}%",
-        'pid': process_info['pid']
+        'pid': process_info['pid'],
+        'server': server_info['wsgi_server']
     }
     
     # Return HTML format as expected by Kubernetes manifest
@@ -209,7 +246,7 @@ def index():
     
     env_info = get_environment_info()
     
-    # HTML template with Jinja2-style syntax but using string formatting for simplicity
+    # Enhanced HTML template with server information
     html_template = """
     <!DOCTYPE html>
     <html lang="en">
@@ -245,6 +282,14 @@ def index():
                 border-radius: 20px;
                 font-weight: bold;
                 margin-top: 10px;
+            }
+            .server-badge {
+                display: inline-block;
+                padding: 4px 12px;
+                background: {{ 'rgba(0, 255, 0, 0.3)' if server_mode == 'gunicorn' else 'rgba(255, 165, 0, 0.3)' }};
+                border-radius: 15px;
+                font-size: 0.8em;
+                margin-left: 10px;
             }
             .section {
                 background: rgba(255, 255, 255, 0.05);
@@ -308,6 +353,10 @@ def index():
                 border-radius: 5px;
                 margin: 5px 0;
             }
+            .production-indicator {
+                color: {{ '#00ff00' if is_production else '#ffaa00' }};
+                font-weight: bold;
+            }
         </style>
     </head>
     <body>
@@ -317,6 +366,8 @@ def index():
             <div class="header">
                 <h1>🐍 Kubernetes Environment Display (Flask)</h1>
                 <div class="environment-badge">{{ environment_upper }}</div>
+                <span class="server-badge">{{ server_mode }}</span>
+                <div class="production-indicator">{{ production_status }}</div>
                 <div class="timestamp">Last updated: {{ timestamp }}</div>
             </div>
 
@@ -328,6 +379,17 @@ def index():
                         <div><span class="label">Namespace:</span><span class="value">{{ pod_namespace }}</span></div>
                         <div><span class="label">Node Name:</span><span class="value">{{ node_name }}</span></div>
                         <div><span class="label">Host IP:</span><span class="value">{{ host_ip }}</span></div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>🖥️ Server Information</h3>
+                    <div class="info-item">
+                        <div><span class="label">WSGI Server:</span><span class="value">{{ server_mode }}</span></div>
+                        <div><span class="label">Production Mode:</span><span class="value">{{ is_production }}</span></div>
+                        <div><span class="label">Debug Mode:</span><span class="value">{{ debug_mode }}</span></div>
+                        <div><span class="label">Worker PID:</span><span class="value">{{ worker_pid }}</span></div>
+                        <div><span class="label">Server Software:</span><span class="value">{{ server_software }}</span></div>
                     </div>
                 </div>
 
@@ -364,6 +426,7 @@ def index():
                     <div class="info-item">
                         <div><span class="label">PID:</span><span class="value">{{ pid }}</span></div>
                         <div><span class="label">Parent PID:</span><span class="value">{{ ppid }}</span></div>
+                        <div><span class="label">Threads:</span><span class="value">{{ num_threads }}</span></div>
                         <div><span class="label">Memory Usage:</span><span class="value">{{ process_memory }}%</span></div>
                         <div><span class="label">CPU Usage:</span><span class="value">{{ process_cpu }}%</span></div>
                         <div><span class="label">Start Time:</span><span class="value">{{ create_time }}</span></div>
@@ -399,6 +462,7 @@ def index():
     """
     
     # Prepare template variables
+    server_info = env_info['server']
     template_vars = {
         'bg_color': bg_color,
         'bg_color_dark': adjust_color(bg_color, -20),
@@ -407,6 +471,14 @@ def index():
         'environment': environment,
         'environment_upper': environment.upper(),
         'timestamp': env_info['application']['timestamp'],
+        
+        # Server information
+        'server_mode': server_info['wsgi_server'],
+        'is_production': server_info['is_production'],
+        'debug_mode': server_info['debug_mode'],
+        'worker_pid': server_info['worker_pid'],
+        'server_software': server_info['server_software'],
+        'production_status': '🟢 PRODUCTION MODE' if server_info['is_production'] else '🟡 DEVELOPMENT MODE',
         
         # Kubernetes info
         'pod_name': env_info['kubernetes']['pod_name'],
@@ -433,6 +505,7 @@ def index():
         'load_avg': ', '.join(f'{x:.2f}' for x in env_info['system']['load_avg']),
         
         # Process info
+        'num_threads': env_info['process']['num_threads'],
         'process_memory': env_info['process']['memory_percent'],
         'process_cpu': env_info['process']['cpu_percent'],
         'create_time': env_info['process']['create_time'],
@@ -458,10 +531,13 @@ def index():
 @app.route('/api/env')
 def api_env():
     """API endpoint for JSON environment data"""
+    server_info = get_server_info()
+    
     return jsonify({
         'environment': os.environ.get('ENVIRONMENT', 'unknown'),
         'bg_color': os.environ.get('BG_COLOR', '#1e3a8a'),
         'font_color': os.environ.get('FONT_COLOR', '#ffffff'),
+        'server': server_info,
         'kubernetes': {
             'pod_name': os.environ.get('POD_NAME', 'unknown'),
             'pod_namespace': os.environ.get('POD_NAMESPACE', 'unknown'),
@@ -498,6 +574,11 @@ def signal_handler(signum, frame):
     logger.info(f"Received signal {signum}, shutting down gracefully")
     sys.exit(0)
 
+# Production-ready application factory
+def create_app():
+    """Application factory for production deployment"""
+    return app
+
 if __name__ == '__main__':
     # Set up signal handlers for graceful shutdown
     signal.signal(signal.SIGTERM, signal_handler)
@@ -511,5 +592,8 @@ if __name__ == '__main__':
     logger.info(f"🎨 Background Color: {os.environ.get('BG_COLOR', '#1e3a8a')}")
     logger.info(f"✏️ Font Color: {os.environ.get('FONT_COLOR', '#ffffff')}")
     logger.info(f"⏰ Started at: {datetime.now().isoformat()}")
+    
+    if is_production():
+        logger.warning("⚠️  Using development server in production! Please use Gunicorn.")
     
     app.run(host='0.0.0.0', port=port, debug=debug)
