@@ -48,4 +48,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:3000/healthcheck.html?probe=docker', timeout=2)"
 
 # Use Gunicorn for production
-CMD ["gunicorn", "--config", "gunicorn.conf.py", "app:app"]# Use official Python runtime based on Alpine Linux
+CMD ["gunicorn", "--config", "gunicorn.conf.py", "app:app"]
