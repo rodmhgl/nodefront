@@ -177,7 +177,7 @@ spec:
         type: Utilization
         averageUtilization: 80
 ---
-kind: secretProviderClass
+kind: SecretProviderClass
 apiVersion: secrets-store.csi.x-k8s.io/v1
 metadata:
   name: myapp-secret-provider-class
