@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  template:
+    metadata:
+      labels:
+        SDLC: staging
+    spec:
+      containers:
+        - name: myapp
+          env:
+            - name: ENVIRONMENT
+              value: staging
+            - name: BG_COLOR
+              value: grey
+            - name: FONT_COLOR
+              value: white

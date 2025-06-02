@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  template:
+    metadata:
+      labels:
+        SDLC: development
+    spec:
+      containers:
+        - name: myapp
+          env:
+            - name: ENVIRONMENT
+              value: development
+            - name: BG_COLOR
+              value: white
+            - name: FONT_COLOR
+              value: black
