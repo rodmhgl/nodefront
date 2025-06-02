@@ -11,7 +11,7 @@ spec:
     metadata:
       labels:
         app: myapp
-        SDLC: dev
+        SDLC: development
         AppID: "123456"
     spec:
       automountServiceAccountToken: false
@@ -21,6 +21,7 @@ spec:
       containers:
         - name: myapp
           image: rodstewart/nodefront:v0.0.1
+          imagePullPolicy: IfNotPresent
           resources:
             requests:
               memory: "64Mi"
@@ -56,31 +57,45 @@ spec:
             runAsUser: 1001
             runAsGroup: 1001
             allowPrivilegeEscalation: false
-          # volumeMounts:
-          #   - name: myapp-page-files
-          #     mountPath: /app/share
-          #   - name: myapp-secret-store
-          #     mountPath: /mnt/secret-store
+          volumeMounts:
+            - name: myapp-page-files
+              mountPath: /app/share
+            - name: myapp-secret-store
+              mountPath: /mnt/secret-store
           env:
             - name: FROM_FIELD
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
-            # - name: FROM_SECRET
-            #   valueFrom:
-            #     secretKeyRef:
-            #       key: myapp-secret-key
-            #       name: myapp-secret-key
-      # volumes:
-      #   - name: myapp-page-files
-      #     persistentVolumeClaim:
-      #       claimName: myapp-page-files-pvc
-      #   - name: myapp-secret-store
-      #     csi:
-      #       driver: secrets-store.csi.k8s.io
-      #       readOnly: true
-      #       volumeAttributes:
-      #         secretProviderClass: myapp-secret-provider-class
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: ENVIRONMENT
+              value: production
+            - name: BG_COLOR
+              value: white
+            - name: FONT_COLOR
+              value: black
+            - name: FROM_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: myapp-secret-key
+                  name: myapp-secret-key
+      volumes:
+        - name: myapp-page-files
+          persistentVolumeClaim:
+            claimName: myapp-page-files-pvc
+        - name: myapp-secret-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: myapp-secret-provider-class
 ---
 kind: Service
 apiVersion: v1
@@ -103,6 +118,10 @@ metadata:
   name: myapp-ingress
   labels:
     name: myapp-ingress
+  annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod-dns
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+      nginx.ingress.kubernetes.io/ssl-passthrough: "true"
 spec:
   ingressClassName: nginx
   rules:
@@ -116,97 +135,102 @@ spec:
                 name: myapp-service
                 port:
                   number: 3000
-# ---
-# kind: PersistentVolume
-# apiVersion: v1
-# metadata:
-#   name: mypv
-#   labels:
-#     usage: myapp-storage-claim-name
-# spec:
-#   capacity:
-#     storage: 5Gi
-#   accessModes:
-#     - ReadWriteMany
-#   persistentVolumeReclaimPolicy: Retain
-#   azureFile:
-#     secretName: azure-pv-secret
-#     secretNamespace: namespace
-#     shareName: app-pages
-#     readOnly: false
-# ---
-# kind: PersistentVolumeClaim
-# apiVersion: v1
-# metadata:
-#   name: myapp-page-files-pvc
-#   annotations:
-#     volume.beta.kubernetes.io/storage-class: ""
-# spec:
-#   accessModes:
-#     - ReadWriteMany
-#   resources:
-#     requests:
-#       storage: 5Gi
-#   selector:
-#     matchLabels:
-#       usage: myapp-storage-claim-name
-# ---
-# kind: HorizontalPodAutoscaler
-# apiVersion: autoscaling/v2
-# metadata:
-#   name: myapp
-# spec:
-#   maxReplicas: 3
-#   minReplicas: 1
-#   scaleTargetRef:
-#     apiVersion: apps/v1
-#     kind: Deployment
-#     name: myapp
-#   metrics:
-#     - type: Resource
-#       resource:
-#         name: cpu
-#         target:
-#           type: Utilization
-#           averageUtilization: 80
-#     - type: Resource
-#       resource:
-#         name: memory
-#         target:
-#           type: Utilization
-#           averageUtilization: 80
-# ---
-# kind: SecretProviderClass
-# apiVersion: secrets-store.csi.x-k8s.io/v1
-# metadata:
-#   name: myapp-secret-provider-class
-# spec:
-#   provider: azure
-#   secretObjects:
-#     - secretName: myapp-secret-key
-#       type: Opaque
-#       data:
-#         - objectName: myapp-secret-key
-#           key: myapp-secret-key
-#     - secretName: myapp-other-secret-key
-#       type: Opaque
-#       data:
-#         - objectName: myapp-other-secret-key
-#           key: myapp-other-secret-key
-#   parameters:
-#     usePodIdentity: "false"
-#     useVMManagedIdentity: "true"
-#     userAssignedIdentityID: myapp-user-assigned-identity-id
-#     keyvaultName: myapp-keyvault-name
-#     cloudName: AzurePublicCloud
-#     objects: |
-#       array:
-#         - |
-#           objectName: myapp-secret-key
-#           objectType: secret
-#           objectVersion: ""
-#         - |
-#           objectName: myapp-other-secret-key
-#           objectType: secret
-#           objectVersion: ""
-#     tenantId: myapp-tenant-id
+  tls:
+    - secretName: myapp-tls
+      hosts:
+        - myapp.azurelaboratory.com
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: myapp-page-files-pv
+  labels:
+    usage: myapp-storage-claim
+spec:
+  storageClassName: azurefile
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  azureFile:
+    secretName: azure-pv-secret
+    secretNamespace: test
+    shareName: app-pages
+    readOnly: false
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: myapp-page-files-pvc
+spec:
+  storageClassName: azurefile
+  volumeName: myapp-page-files-pv
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  selector:
+    matchLabels:
+      usage: myapp-storage-claim
+---
+kind: HorizontalPodAutoscaler
+apiVersion: autoscaling/v2
+metadata:
+  name: myapp-hpa
+spec:
+  maxReplicas: 1
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapp
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+---
+kind: SecretProviderClass
+apiVersion: secrets-store.csi.x-k8s.io/v1
+metadata:
+  name: myapp-secret-provider-class
+spec:
+  provider: azure
+  secretObjects:
+    - secretName: myapp-secret-key
+      type: Opaque
+      data:
+        - objectName: myapp-secret-key
+          key: myapp-secret-key
+    - secretName: myapp-other-secret-key
+      type: Opaque
+      data:
+        - objectName: myapp-other-secret-key
+          key: myapp-other-secret-key
+  parameters:
+    usePodIdentity: "false"
+    useVMManagedIdentity: "true"
+    userAssignedIdentityID: placeholder
+    keyvaultName: tfstate-rn
+    cloudName: AzurePublicCloud
+    objects: |
+      array:
+        - |
+          objectName: myapp-secret-key
+          objectType: secret
+          objectVersion: ""
+        - |
+          objectName: myapp-other-secret-key
+          objectType: secret
+          objectVersion: ""
+    tenantId: placeholder
