@@ -5,3 +5,4 @@ metadata:
 spec:
   azureFile:
     secretNamespace: staging-myapp
+    shareName: staging-app-pages

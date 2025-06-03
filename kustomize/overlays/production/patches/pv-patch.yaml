@@ -5,3 +5,4 @@ metadata:
 spec:
   azureFile:
     secretNamespace: prod-myapp
+    shareName: prod-app-pages
