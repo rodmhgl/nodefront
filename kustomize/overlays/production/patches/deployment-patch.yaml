@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  template:
+    metadata:
+      labels:
+        SDLC: production
+    spec:
+      containers:
+        - name: myapp
+          env:
+            - name: ENVIRONMENT
+              value: production
+            - name: BG_COLOR
+              value: black
+            - name: FONT_COLOR
+              value: white
+      volumes:
+        - name: myapp-secret-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: prod-myapp-secret-provider-class

@@ -170,7 +170,6 @@ def get_environment_info():
         'kubernetes': {
             'pod_name': os.environ.get('POD_NAME', 'unknown'),
             'pod_namespace': os.environ.get('POD_NAMESPACE', 'unknown'),
-            'node_name': os.environ.get('NODE_NAME', 'unknown'),
             'host_ip': os.environ.get('FROM_FIELD', 'unknown')
         },
         'application': {
@@ -377,7 +376,6 @@ def index():
                     <div class="info-item">
                         <div><span class="label">Pod Name:</span><span class="value">{{ pod_name }}</span></div>
                         <div><span class="label">Namespace:</span><span class="value">{{ pod_namespace }}</span></div>
-                        <div><span class="label">Node Name:</span><span class="value">{{ node_name }}</span></div>
                         <div><span class="label">Host IP:</span><span class="value">{{ host_ip }}</span></div>
                     </div>
                 </div>
@@ -483,7 +481,6 @@ def index():
         # Kubernetes info
         'pod_name': env_info['kubernetes']['pod_name'],
         'pod_namespace': env_info['kubernetes']['pod_namespace'],
-        'node_name': env_info['kubernetes']['node_name'],
         'host_ip': env_info['kubernetes']['host_ip'],
         
         # Application info
@@ -541,7 +538,6 @@ def api_env():
         'kubernetes': {
             'pod_name': os.environ.get('POD_NAME', 'unknown'),
             'pod_namespace': os.environ.get('POD_NAMESPACE', 'unknown'),
-            'node_name': os.environ.get('NODE_NAME', 'unknown'),
             'host_ip': os.environ.get('FROM_FIELD', 'unknown')
         },
         'uptime': round(time.time() - START_TIME, 2),
