@@ -13,6 +13,5 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   azureFile:
     secretName: azure-pv-secret
-    secretNamespace: test
     shareName: app-pages
     readOnly: false

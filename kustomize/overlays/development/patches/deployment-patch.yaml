@@ -17,3 +17,10 @@ spec:
               value: white
             - name: FONT_COLOR
               value: black
+      volumes:
+        - name: myapp-secret-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: dev-myapp-secret-provider-class
