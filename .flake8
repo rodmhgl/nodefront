@@ -12,8 +12,11 @@ exclude =
     dist,
     *.egg-info
 ignore = 
+    # line too long
+    E501,
+    # whitespace before ':'
     E203,
+    # line break before binary operator
     W503,
-    E501
 per-file-ignores =
     __init__.py:F401
