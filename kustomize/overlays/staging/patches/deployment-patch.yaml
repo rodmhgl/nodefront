@@ -1,5 +1,5 @@
-apiVersion: apps/v1
 kind: Deployment
+apiVersion: apps/v1
 metadata:
   name: myapp
 spec:
@@ -10,13 +10,6 @@ spec:
     spec:
       containers:
         - name: myapp
-          env:
-            - name: ENVIRONMENT
-              value: staging
-            - name: BG_COLOR
-              value: grey
-            - name: FONT_COLOR
-              value: white
       volumes:
         - name: myapp-secret-store
           csi:

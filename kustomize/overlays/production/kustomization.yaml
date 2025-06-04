@@ -8,6 +8,7 @@ resources:
 
 patches:
 - path: patches/deployment-patch.yaml
+- path: patches/configmap-patch.yaml
 - path: patches/hpa-patch.yaml
 - path: patches/secret-provider-patch.yaml
 - path: patches/ingress-patch.yaml

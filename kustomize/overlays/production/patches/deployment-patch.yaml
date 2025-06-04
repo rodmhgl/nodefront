@@ -10,13 +10,6 @@ spec:
     spec:
       containers:
         - name: myapp
-          env:
-            - name: ENVIRONMENT
-              value: production
-            - name: BG_COLOR
-              value: black
-            - name: FONT_COLOR
-              value: white
       volumes:
         - name: myapp-secret-store
           csi:

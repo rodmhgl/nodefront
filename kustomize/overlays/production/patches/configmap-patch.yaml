@@ -1,0 +1,18 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: myapp-config
+data:
+  # Production environment settings
+  ENVIRONMENT: "production"
+  BG_COLOR: "black"
+  FONT_COLOR: "white"
+  
+  # Production settings - no debug
+  DEBUG: "false"
+  LOG_LEVEL: "WARNING"
+  
+  # Production server settings - full capacity
+  GUNICORN_WORKERS: "4"
+  GUNICORN_THREADS: "8"
+  GUNICORN_TIMEOUT: "300"

@@ -60,6 +60,9 @@ spec:
               mountPath: /app/share
             - name: myapp-secret-store
               mountPath: /mnt/secret-store
+          envFrom:
+            - configMapRef:
+                name: myapp-config
           env:
             - name: FROM_FIELD
               valueFrom:
