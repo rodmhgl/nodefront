@@ -156,11 +156,29 @@ jobs:
           chmod +x argocd
           sudo mv ./argocd /usr/local/bin/argocd
 
-      - name: Argocd app sync
+      - name: Argo CD Login
         shell: bash
         run: |
           argocd login argocd.azurelaboratory.com \
             --grpc-web \
-            --username ${{ vars.ARGOCD_USERNAME }} \
-            --password ${{ secrets.ARGOCD_PASSWORD }}
-          argocd app sync nodefront
+            --username ${{ '${{ vars.ARGOCD_USERNAME }}' }} \
+            --password ${{ '${{ secrets.ARGOCD_PASSWORD }}' }}
+
+      - name: Ensure Argo CD Repo Exists
+        shell: bash
+        run: |
+          repo="https://github.com/rodmhgl/nodefront.git"
+          argocd repo list | grep -q $repo || argocd repo add $repo
+
+      - name: Ensure Argo CD App Exists
+        shell: bash
+        run: |
+          app=nodefront-development
+          argocd app list | grep -q argocd/$app || argocd app create $app -f nodefront-development-application.yaml
+
+      - name: Argo CD App Sync
+        shell: bash
+        run: |
+          app=nodefront-development
+          argocd app sync $app
+          argocd app wait $app --timeout 180
