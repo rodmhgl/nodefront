@@ -11,7 +11,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: myapp.azurelaboratory.com
+    - host: myapp-development.azurelaboratory.com
       http:
         paths:
           - pathType: Prefix
@@ -24,4 +24,4 @@ spec:
   tls:
     - secretName: myapp-tls
       hosts:
-        - myapp.azurelaboratory.com
+        - myapp-development.azurelaboratory.com
