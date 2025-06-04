@@ -1,40 +1,46 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: nodefront-development
+  name: nodefront-production-eastus
   namespace: argocd
   labels:
     app: nodefront
-    environment: development
+    environment: production
+    region: eastus
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
-    repoURL: https://github.com/rodmhgl/nodefront.git  # Update with your repository URL
+    repoURL: https://github.com/rodmhgl/nodefront.git
     targetRevision: main
-    path: environments/development
+    path: environments/production-eastus
   destination:
     server: https://kubernetes.default.svc
-    namespace: development
+    namespace: production-eastus
   syncPolicy:
     automated:
-      prune: true
-      selfHeal: true
+      prune: false  # Manual sync for production
+      selfHeal: false
       allowEmpty: false
     syncOptions:
       - CreateNamespace=true
       - PrunePropagationPolicy=foreground
       - PruneLast=true
+      - ApplyOutOfSyncOnly=true  # Only sync changed resources
     retry:
       limit: 5
       backoff:
         duration: 5s
         factor: 2
         maxDuration: 3m
-  revisionHistoryLimit: 10
+  revisionHistoryLimit: 20  # Keep more history for production
   info:
     - name: 'Description'
-      value: 'Flask application for displaying environment information - Development'
+      value: 'Flask application for displaying environment information - Production East US'
     - name: 'Owner'
       value: 'DevOps Team'
+    - name: 'Region'
+      value: 'East US'
+    - name: 'Criticality'
+      value: 'High'

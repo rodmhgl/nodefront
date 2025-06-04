@@ -1,0 +1,17 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: myapp-page-files-pv
+  labels:
+    usage: myapp-storage-claim
+spec:
+  storageClassName: azurefile
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  azureFile:
+    secretName: azure-pv-secret
+    shareName: app-pages
+    readOnly: false

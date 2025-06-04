@@ -1,26 +1,27 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: nodefront-development
+  name: nodefront-staging-eastus
   namespace: argocd
   labels:
     app: nodefront
-    environment: development
+    environment: staging
+    region: eastus
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
-    repoURL: https://github.com/rodmhgl/nodefront.git  # Update with your repository URL
+    repoURL: https://github.com/rodmhgl/nodefront.git
     targetRevision: main
-    path: environments/development
+    path: environments/staging-eastus
   destination:
     server: https://kubernetes.default.svc
-    namespace: development
+    namespace: staging-eastus
   syncPolicy:
     automated:
-      prune: true
-      selfHeal: true
+      prune: false  # Manual sync for staging
+      selfHeal: false
       allowEmpty: false
     syncOptions:
       - CreateNamespace=true
@@ -35,6 +36,8 @@ spec:
   revisionHistoryLimit: 10
   info:
     - name: 'Description'
-      value: 'Flask application for displaying environment information - Development'
+      value: 'Flask application for displaying environment information - Staging East US'
     - name: 'Owner'
       value: 'DevOps Team'
+    - name: 'Region'
+      value: 'East US'

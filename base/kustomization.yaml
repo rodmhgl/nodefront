@@ -1,0 +1,18 @@
+kind: Kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+
+resources:
+- configmap.yaml
+- deployment.yaml
+- service.yaml
+- ingress.yaml
+- pv.yaml
+- pvc.yaml
+- hpa.yaml
+- secret-provider-class.yaml
+- servicemonitor.yaml
+
+labels:
+- includeSelectors: true
+  pairs:
+    app: myapp

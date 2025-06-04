@@ -1,0 +1,15 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: myapp-page-files-pvc
+spec:
+  storageClassName: azurefile
+  volumeName: myapp-page-files-pv
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  selector:
+    matchLabels:
+      usage: myapp-storage-claim

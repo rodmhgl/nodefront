@@ -1,0 +1,73 @@
+kind: Kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+
+namePrefix: staging-
+namespace: staging-westus3
+
+resources:
+  - ../../base
+
+# Staging West-specific image
+images:
+  - name: rodstewart/nodefront
+    newTag: v1.0.0
+
+# Staging configuration
+configMapGenerator:
+  - name: myapp-config
+    behavior: merge
+    literals:
+      - ENVIRONMENT=staging
+      - BG_COLOR=grey
+      - FONT_COLOR=white
+      - DEBUG=false
+      - LOG_LEVEL=INFO
+      - GUNICORN_WORKERS=2
+      - GUNICORN_THREADS=4
+      - REGION=westus3
+
+# Staging West patches
+patches:
+  - target:
+      kind: Deployment
+      name: myapp
+    patch: |-
+      - op: add
+        path: /spec/template/metadata/labels/SDLC
+        value: staging
+      - op: add
+        path: /spec/template/metadata/labels/region
+        value: westus3
+      - op: replace
+        path: /spec/template/spec/volumes/1/csi/volumeAttributes/secretProviderClass
+        value: staging-myapp-secret-provider-class
+  - target:
+      kind: Ingress
+      name: myapp-ingress
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: myapp-staging-westus3.azurelaboratory.com
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: myapp-staging-westus3.azurelaboratory.com
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: myapp-hpa
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 1
+      - op: replace
+        path: /spec/maxReplicas
+        value: 5
+  - target:
+      kind: PersistentVolume
+      name: myapp-page-files-pv
+    patch: |-
+      - op: replace
+        path: /spec/azureFile/secretName
+        value: azure-pv-secret-westus3
+      - op: replace
+        path: /spec/azureFile/shareName
+        value: app-pages-staging-westus3

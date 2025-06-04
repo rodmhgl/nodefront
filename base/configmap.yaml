@@ -1,0 +1,28 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: myapp-config
+data:
+  # Application settings
+  PORT: "3000"
+  FLASK_ENV: "production"
+  DEBUG: "false"
+  
+  # UI Configuration defaults
+  BG_COLOR: "#1e3a8a"
+  FONT_COLOR: "#ffffff"
+  ENVIRONMENT: "development"
+  
+  # Logging configuration
+  LOG_LEVEL: "INFO"
+  
+  # Feature flags
+  ENABLE_METRICS: "true"
+  
+  # Health check settings
+  HEALTH_CHECK_PATH: "/healthcheck.html"
+  
+  # Server configuration
+  GUNICORN_WORKERS: "2"
+  GUNICORN_THREADS: "4"
+  GUNICORN_TIMEOUT: "120"
