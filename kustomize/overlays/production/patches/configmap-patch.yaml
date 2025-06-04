@@ -6,7 +6,7 @@ data:
   # Production environment settings
   ENVIRONMENT: "production"
   BG_COLOR: "black"
-  FONT_COLOR: "white"
+  FONT_COLOR: "orange"
   
   # Production settings - no debug
   DEBUG: "false"
