@@ -174,7 +174,7 @@ jobs:
         shell: bash
         run: |
           app=nodefront-development
-          argocd app list | grep -q argocd/$app || argocd app create $app -f nodefront-development-application.yaml
+          argocd app list | grep -q argocd/$app || argocd app create $app -f argo-cd/applications/nodefront-development.yaml
 
       - name: Argo CD App Sync
         shell: bash
