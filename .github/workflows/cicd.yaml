@@ -161,8 +161,8 @@ jobs:
         run: |
           argocd login argocd.azurelaboratory.com \
             --grpc-web \
-            --username ${{ '${{ vars.ARGOCD_USERNAME }}' }} \
-            --password ${{ '${{ secrets.ARGOCD_PASSWORD }}' }}
+            --username ${{ vars.ARGOCD_USERNAME }} \
+            --password ${{ secrets.ARGOCD_PASSWORD }}
 
       - name: Ensure Argo CD Repo Exists
         shell: bash
