@@ -21,11 +21,11 @@ import psutil
 # Configure production-ready logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[
         logging.StreamHandler(sys.stdout),
-        logging.FileHandler('/tmp/app.log') if os.path.exists('/tmp') else logging.NullHandler()
-    ]
+        logging.FileHandler("/tmp/app.log") if os.path.exists("/tmp") else logging.NullHandler(),
+    ],
 )
 logger = logging.getLogger(__name__)
 
@@ -34,35 +34,38 @@ app = Flask(__name__)
 app.config.update(
     JSON_SORT_KEYS=False,
     # Production security settings
-    SECRET_KEY=os.environ.get('SECRET_KEY', os.urandom(32)),
+    SECRET_KEY=os.environ.get("SECRET_KEY", os.urandom(32)),
     # Disable debug mode in production
     DEBUG=False,
     # Production JSON settings
-    JSONIFY_PRETTYPRINT_REGULAR=False
+    JSONIFY_PRETTYPRINT_REGULAR=False,
 )
 
 # Application start time for uptime calculation
 START_TIME = time.time()
 
+
 def is_production():
     """Detect if running in production environment"""
     return (
-        os.environ.get('FLASK_ENV') == 'production' or
-        os.environ.get('ENVIRONMENT') == 'production' or
-        'gunicorn' in os.environ.get('SERVER_SOFTWARE', '') or
-        'uwsgi' in os.environ.get('SERVER_SOFTWARE', '')
+        os.environ.get("FLASK_ENV") == "production"
+        or os.environ.get("ENVIRONMENT") == "production"
+        or "gunicorn" in os.environ.get("SERVER_SOFTWARE", "")
+        or "uwsgi" in os.environ.get("SERVER_SOFTWARE", "")
     )
+
 
 def safe_read_file(file_path):
     """Safely read file contents"""
     try:
         path = Path(file_path)
         if path.exists() and path.is_file():
-            return path.read_text(encoding='utf-8').strip()
-        return 'File not found'
+            return path.read_text(encoding="utf-8").strip()
+        return "File not found"
     except Exception as e:
         logger.warning(f"Error reading file {file_path}: {e}")
-        return f'Error reading file: {str(e)}'
+        return f"Error reading file: {str(e)}"
+
 
 def safe_read_dir(dir_path):
     """Safely read directory contents"""
@@ -73,76 +76,81 @@ def safe_read_dir(dir_path):
         return []
     except Exception as e:
         logger.warning(f"Error reading directory {dir_path}: {e}")
-        return [f'Error reading directory: {str(e)}']
+        return [f"Error reading directory: {str(e)}"]
+
 
 def get_memory_info():
     """Get memory information in MB"""
     try:
         memory = psutil.virtual_memory()
         return {
-            'total': round(memory.total / 1024 / 1024),
-            'available': round(memory.available / 1024 / 1024),
-            'used': round(memory.used / 1024 / 1024),
-            'percent': memory.percent
+            "total": round(memory.total / 1024 / 1024),
+            "available": round(memory.available / 1024 / 1024),
+            "used": round(memory.used / 1024 / 1024),
+            "percent": memory.percent,
         }
     except Exception as e:
         logger.error(f"Error getting memory info: {e}")
-        return {'total': 0, 'available': 0, 'used': 0, 'percent': 0}
+        return {"total": 0, "available": 0, "used": 0, "percent": 0}
+
 
 def get_cpu_info():
     """Get CPU information"""
     try:
         return {
-            'count': psutil.cpu_count(),
-            'percent': psutil.cpu_percent(interval=1),
-            'load_avg': os.getloadavg() if hasattr(os, 'getloadavg') else [0, 0, 0]
+            "count": psutil.cpu_count(),
+            "percent": psutil.cpu_percent(interval=1),
+            "load_avg": os.getloadavg() if hasattr(os, "getloadavg") else [0, 0, 0],
         }
     except Exception as e:
         logger.error(f"Error getting CPU info: {e}")
-        return {'count': 1, 'percent': 0, 'load_avg': [0, 0, 0]}
+        return {"count": 1, "percent": 0, "load_avg": [0, 0, 0]}
+
 
 def get_process_info():
     """Get current process information"""
     try:
         process = psutil.Process()
         return {
-            'pid': process.pid,
-            'ppid': process.ppid(),
-            'memory_percent': round(process.memory_percent(), 2),
-            'cpu_percent': round(process.cpu_percent(), 2),
-            'create_time': datetime.fromtimestamp(process.create_time()).isoformat(),
-            'uptime': round(time.time() - START_TIME, 2),
-            'num_threads': process.num_threads()
+            "pid": process.pid,
+            "ppid": process.ppid(),
+            "memory_percent": round(process.memory_percent(), 2),
+            "cpu_percent": round(process.cpu_percent(), 2),
+            "create_time": datetime.fromtimestamp(process.create_time()).isoformat(),
+            "uptime": round(time.time() - START_TIME, 2),
+            "num_threads": process.num_threads(),
         }
     except Exception as e:
         logger.error(f"Error getting process info: {e}")
         return {
-            'pid': os.getpid(),
-            'ppid': os.getppid(),
-            'memory_percent': 0,
-            'cpu_percent': 0,
-            'create_time': datetime.now().isoformat(),
-            'uptime': round(time.time() - START_TIME, 2),
-            'num_threads': 1
+            "pid": os.getpid(),
+            "ppid": os.getppid(),
+            "memory_percent": 0,
+            "cpu_percent": 0,
+            "create_time": datetime.now().isoformat(),
+            "uptime": round(time.time() - START_TIME, 2),
+            "num_threads": 1,
         }
+
 
 def get_server_info():
     """Get production server information"""
     return {
-        'server_software': os.environ.get('SERVER_SOFTWARE', 'Unknown'),
-        'wsgi_server': 'gunicorn' if 'gunicorn' in os.environ.get('SERVER_SOFTWARE', '') else 'development',
-        'is_production': is_production(),
-        'flask_env': os.environ.get('FLASK_ENV', 'development'),
-        'debug_mode': app.debug,
-        'worker_pid': os.getpid(),
-        'worker_ppid': os.getppid()
+        "server_software": os.environ.get("SERVER_SOFTWARE", "Unknown"),
+        "wsgi_server": "gunicorn" if "gunicorn" in os.environ.get("SERVER_SOFTWARE", "") else "development",
+        "is_production": is_production(),
+        "flask_env": os.environ.get("FLASK_ENV", "development"),
+        "debug_mode": app.debug,
+        "worker_pid": os.getpid(),
+        "worker_ppid": os.getppid(),
     }
+
 
 def adjust_color(color, amount):
     """Adjust color brightness"""
     try:
-        color = color.lstrip('#')
-        rgb = tuple(int(color[i:i+2], 16) for i in (0, 2, 4))
+        color = color.lstrip("#")
+        rgb = tuple(int(color[i : i + 2], 16) for i in (0, 2, 4))
         adjusted = []
         for c in rgb:
             new_c = c + amount
@@ -151,74 +159,73 @@ def adjust_color(color, amount):
     except Exception:
         return color
 
+
 def get_environment_info():
     """Collect comprehensive environment information"""
     memory_info = get_memory_info()
     cpu_info = get_cpu_info()
     process_info = get_process_info()
     server_info = get_server_info()
-    
+
     # Collect environment variables (hide sensitive ones)
     env_vars = {}
     for key, value in os.environ.items():
-        if any(sensitive in key.upper() for sensitive in ['SECRET', 'PASSWORD', 'TOKEN', 'KEY']):
-            env_vars[key] = '[HIDDEN]'
+        if any(sensitive in key.upper() for sensitive in ["SECRET", "PASSWORD", "TOKEN", "KEY"]):
+            env_vars[key] = "[HIDDEN]"
         else:
             env_vars[key] = value
-    
+
     return {
-        'kubernetes': {
-            'pod_name': os.environ.get('POD_NAME', 'unknown'),
-            'pod_namespace': os.environ.get('POD_NAMESPACE', 'unknown'),
-            'host_ip': os.environ.get('FROM_FIELD', 'unknown')
+        "kubernetes": {
+            "pod_name": os.environ.get("POD_NAME", "unknown"),
+            "pod_namespace": os.environ.get("POD_NAMESPACE", "unknown"),
+            "host_ip": os.environ.get("FROM_FIELD", "unknown"),
         },
-        'application': {
-            'environment': os.environ.get('ENVIRONMENT', 'unknown'),
-            'uptime': process_info['uptime'],
-            'timestamp': datetime.now().isoformat(),
-            'python_version': platform.python_version(),
-            'platform': platform.platform(),
-            'architecture': platform.architecture()[0],
-            'pid': process_info['pid'],
-            'ppid': process_info['ppid']
+        "application": {
+            "environment": os.environ.get("ENVIRONMENT", "unknown"),
+            "uptime": process_info["uptime"],
+            "timestamp": datetime.now().isoformat(),
+            "python_version": platform.python_version(),
+            "platform": platform.platform(),
+            "architecture": platform.architecture()[0],
+            "pid": process_info["pid"],
+            "ppid": process_info["ppid"],
         },
-        'server': server_info,
-        'system': {
-            'hostname': socket.gethostname(),
-            'cpu_count': cpu_info['count'],
-            'cpu_percent': cpu_info['percent'],
-            'load_avg': cpu_info['load_avg'],
-            'memory_total_mb': memory_info['total'],
-            'memory_available_mb': memory_info['available'],
-            'memory_used_mb': memory_info['used'],
-            'memory_percent': memory_info['percent']
+        "server": server_info,
+        "system": {
+            "hostname": socket.gethostname(),
+            "cpu_count": cpu_info["count"],
+            "cpu_percent": cpu_info["percent"],
+            "load_avg": cpu_info["load_avg"],
+            "memory_total_mb": memory_info["total"],
+            "memory_available_mb": memory_info["available"],
+            "memory_used_mb": memory_info["used"],
+            "memory_percent": memory_info["percent"],
         },
-        'process': process_info,
-        'volumes': {
-            'shared_files': safe_read_dir('/app/share'),
-            'secret_store': safe_read_dir('/mnt/secret-store')
-        },
-        'environment_variables': dict(sorted(env_vars.items()))
+        "process": process_info,
+        "volumes": {"shared_files": safe_read_dir("/app/share"), "secret_store": safe_read_dir("/mnt/secret-store")},
+        "environment_variables": dict(sorted(env_vars.items())),
     }
 
-@app.route('/healthcheck.html')
+
+@app.route("/healthcheck.html")
 def health_check():
     """Health check endpoint for Kubernetes probes"""
-    probe = request.args.get('probe', 'unknown')
+    probe = request.args.get("probe", "unknown")
     timestamp = datetime.now().isoformat()
     process_info = get_process_info()
     server_info = get_server_info()
-    
+
     health_status = {
-        'status': 'healthy',
-        'probe': probe,
-        'timestamp': timestamp,
-        'uptime': process_info['uptime'],
-        'memory_usage': f"{get_memory_info()['percent']:.1f}%",
-        'pid': process_info['pid'],
-        'server': server_info['wsgi_server']
+        "status": "healthy",
+        "probe": probe,
+        "timestamp": timestamp,
+        "uptime": process_info["uptime"],
+        "memory_usage": f"{get_memory_info()['percent']:.1f}%",
+        "pid": process_info["pid"],
+        "server": server_info["wsgi_server"],
     }
-    
+
     # Return HTML format as expected by Kubernetes manifest
     html_content = f"""
     <!DOCTYPE html>
@@ -233,18 +240,19 @@ def health_check():
     </body>
     </html>
     """
-    
-    return html_content, 200, {'Content-Type': 'text/html'}
 
-@app.route('/')
+    return html_content, 200, {"Content-Type": "text/html"}
+
+
+@app.route("/")
 def index():
     """Main application endpoint - displays environment information"""
-    bg_color = os.environ.get('BG_COLOR', '#1e3a8a')
-    font_color = os.environ.get('FONT_COLOR', '#ffffff')
-    environment = os.environ.get('ENVIRONMENT', 'unknown')
-    
+    bg_color = os.environ.get("BG_COLOR", "#1e3a8a")
+    font_color = os.environ.get("FONT_COLOR", "#ffffff")
+    environment = os.environ.get("ENVIRONMENT", "unknown")
+
     env_info = get_environment_info()
-    
+
     # Enhanced HTML template with server information
     html_template = """
     <!DOCTYPE html>
@@ -458,138 +466,131 @@ def index():
     </body>
     </html>
     """
-    
+
     # Prepare template variables
-    server_info = env_info['server']
+    server_info = env_info["server"]
     template_vars = {
-        'bg_color': bg_color,
-        'bg_color_dark': adjust_color(bg_color, -20),
-        'font_color': font_color,
-        'font_color_light': adjust_color(font_color, 20),
-        'environment': environment,
-        'environment_upper': environment.upper(),
-        'timestamp': env_info['application']['timestamp'],
-        
+        "bg_color": bg_color,
+        "bg_color_dark": adjust_color(bg_color, -20),
+        "font_color": font_color,
+        "font_color_light": adjust_color(font_color, 20),
+        "environment": environment,
+        "environment_upper": environment.upper(),
+        "timestamp": env_info["application"]["timestamp"],
         # Server information
-        'server_mode': server_info['wsgi_server'],
-        'is_production': server_info['is_production'],
-        'debug_mode': server_info['debug_mode'],
-        'worker_pid': server_info['worker_pid'],
-        'server_software': server_info['server_software'],
-        'production_status': '🟢 PRODUCTION MODE' if server_info['is_production'] else '🟡 DEVELOPMENT MODE',
-        
+        "server_mode": server_info["wsgi_server"],
+        "is_production": server_info["is_production"],
+        "debug_mode": server_info["debug_mode"],
+        "worker_pid": server_info["worker_pid"],
+        "server_software": server_info["server_software"],
+        "production_status": "🟢 PRODUCTION MODE" if server_info["is_production"] else "🟡 DEVELOPMENT MODE",
         # Kubernetes info
-        'pod_name': env_info['kubernetes']['pod_name'],
-        'pod_namespace': env_info['kubernetes']['pod_namespace'],
-        'host_ip': env_info['kubernetes']['host_ip'],
-        
+        "pod_name": env_info["kubernetes"]["pod_name"],
+        "pod_namespace": env_info["kubernetes"]["pod_namespace"],
+        "host_ip": env_info["kubernetes"]["host_ip"],
         # Application info
-        'uptime': round(env_info['application']['uptime']),
-        'python_version': env_info['application']['python_version'],
-        'platform': env_info['application']['platform'],
-        'architecture': env_info['application']['architecture'],
-        'pid': env_info['application']['pid'],
-        'ppid': env_info['application']['ppid'],
-        
+        "uptime": round(env_info["application"]["uptime"]),
+        "python_version": env_info["application"]["python_version"],
+        "platform": env_info["application"]["platform"],
+        "architecture": env_info["application"]["architecture"],
+        "pid": env_info["application"]["pid"],
+        "ppid": env_info["application"]["ppid"],
         # System info
-        'hostname': env_info['system']['hostname'],
-        'cpu_count': env_info['system']['cpu_count'],
-        'cpu_percent': env_info['system']['cpu_percent'],
-        'memory_total': env_info['system']['memory_total_mb'],
-        'memory_used': env_info['system']['memory_used_mb'],
-        'memory_available': env_info['system']['memory_available_mb'],
-        'memory_percent': env_info['system']['memory_percent'],
-        'load_avg': ', '.join(f'{x:.2f}' for x in env_info['system']['load_avg']),
-        
+        "hostname": env_info["system"]["hostname"],
+        "cpu_count": env_info["system"]["cpu_count"],
+        "cpu_percent": env_info["system"]["cpu_percent"],
+        "memory_total": env_info["system"]["memory_total_mb"],
+        "memory_used": env_info["system"]["memory_used_mb"],
+        "memory_available": env_info["system"]["memory_available_mb"],
+        "memory_percent": env_info["system"]["memory_percent"],
+        "load_avg": ", ".join(f"{x:.2f}" for x in env_info["system"]["load_avg"]),
         # Process info
-        'num_threads': env_info['process']['num_threads'],
-        'process_memory': env_info['process']['memory_percent'],
-        'process_cpu': env_info['process']['cpu_percent'],
-        'create_time': env_info['process']['create_time'],
-        
+        "num_threads": env_info["process"]["num_threads"],
+        "process_memory": env_info["process"]["memory_percent"],
+        "process_cpu": env_info["process"]["cpu_percent"],
+        "create_time": env_info["process"]["create_time"],
         # Files
-        'shared_files_list': '\n'.join(f'<li>{file}</li>' for file in env_info['volumes']['shared_files']),
-        'secret_files_list': '\n'.join(f'<li>{file}</li>' for file in env_info['volumes']['secret_store']),
-        
+        "shared_files_list": "\n".join(f"<li>{file}</li>" for file in env_info["volumes"]["shared_files"]),
+        "secret_files_list": "\n".join(f"<li>{file}</li>" for file in env_info["volumes"]["secret_store"]),
         # Environment variables
-        'env_vars_list': '\n'.join(
+        "env_vars_list": "\n".join(
             f'<li><span class="label">{key}:</span><span class="value">{value}</span></li>'
-            for key, value in env_info['environment_variables'].items()
-        )
+            for key, value in env_info["environment_variables"].items()
+        ),
     }
-    
+
     # Simple template substitution
     html_content = html_template
     for key, value in template_vars.items():
-        html_content = html_content.replace(f'{{{{ {key} }}}}', str(value))
-    
+        html_content = html_content.replace(f"{{{{ {key} }}}}", str(value))
+
     return html_content
 
-@app.route('/api/env')
+
+@app.route("/api/env")
 def api_env():
     """API endpoint for JSON environment data"""
     server_info = get_server_info()
-    
-    return jsonify({
-        'environment': os.environ.get('ENVIRONMENT', 'unknown'),
-        'bg_color': os.environ.get('BG_COLOR', '#1e3a8a'),
-        'font_color': os.environ.get('FONT_COLOR', '#ffffff'),
-        'server': server_info,
-        'kubernetes': {
-            'pod_name': os.environ.get('POD_NAME', 'unknown'),
-            'pod_namespace': os.environ.get('POD_NAMESPACE', 'unknown'),
-            'host_ip': os.environ.get('FROM_FIELD', 'unknown')
-        },
-        'uptime': round(time.time() - START_TIME, 2),
-        'timestamp': datetime.now().isoformat(),
-        'python_version': platform.python_version(),
-        'platform': platform.platform()
-    })
+
+    return jsonify(
+        {
+            "environment": os.environ.get("ENVIRONMENT", "unknown"),
+            "bg_color": os.environ.get("BG_COLOR", "#1e3a8a"),
+            "font_color": os.environ.get("FONT_COLOR", "#ffffff"),
+            "server": server_info,
+            "kubernetes": {
+                "pod_name": os.environ.get("POD_NAME", "unknown"),
+                "pod_namespace": os.environ.get("POD_NAMESPACE", "unknown"),
+                "host_ip": os.environ.get("FROM_FIELD", "unknown"),
+            },
+            "uptime": round(time.time() - START_TIME, 2),
+            "timestamp": datetime.now().isoformat(),
+            "python_version": platform.python_version(),
+            "platform": platform.platform(),
+        }
+    )
+
 
 @app.errorhandler(404)
 def not_found(error):
     """404 error handler"""
-    return jsonify({
-        'error': 'Not Found',
-        'path': request.path,
-        'timestamp': datetime.now().isoformat()
-    }), 404
+    return jsonify({"error": "Not Found", "path": request.path, "timestamp": datetime.now().isoformat()}), 404
+
 
 @app.errorhandler(500)
 def internal_error(error):
     """500 error handler"""
     logger.error(f"Internal server error: {error}")
-    return jsonify({
-        'error': 'Internal Server Error',
-        'message': str(error),
-        'timestamp': datetime.now().isoformat()
-    }), 500
+    return jsonify({"error": "Internal Server Error", "message": str(error), "timestamp": datetime.now().isoformat()}), 500
+
 
 def signal_handler(signum, frame):
     """Graceful shutdown handler"""
     logger.info(f"Received signal {signum}, shutting down gracefully")
     sys.exit(0)
 
+
 # Production-ready application factory
 def create_app():
     """Application factory for production deployment"""
     return app
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # Set up signal handlers for graceful shutdown
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
-    
-    port = int(os.environ.get('PORT', 3000))
-    debug = os.environ.get('DEBUG', 'false').lower() == 'true'
-    
+
+    port = int(os.environ.get("PORT", 3000))
+    debug = os.environ.get("DEBUG", "false").lower() == "true"
+
     logger.info(f"🐍 Environment Display App (Flask) starting on port {port}")
     logger.info(f"📊 Environment: {os.environ.get('ENVIRONMENT', 'unknown')}")
     logger.info(f"🎨 Background Color: {os.environ.get('BG_COLOR', '#1e3a8a')}")
     logger.info(f"✏️ Font Color: {os.environ.get('FONT_COLOR', '#ffffff')}")
     logger.info(f"⏰ Started at: {datetime.now().isoformat()}")
-    
+
     if is_production():
         logger.warning("⚠️  Using development server in production! Please use Gunicorn.")
-    
-    app.run(host='0.0.0.0', port=port, debug=debug)
+
+    app.run(host="0.0.0.0", port=port, debug=debug)

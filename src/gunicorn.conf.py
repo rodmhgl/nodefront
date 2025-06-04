@@ -21,16 +21,16 @@ max_requests_jitter = 50
 
 # Logging
 accesslog = "-"  # Log to stdout
-errorlog = "-"   # Log to stderr
+errorlog = "-"  # Log to stderr
 loglevel = "info"
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(D)s'
 
 # Process naming
-proc_name = 'k8s-env-display'
+proc_name = "k8s-env-display"
 
 # Server mechanics
 daemon = False
-pidfile = '/tmp/gunicorn.pid'
+pidfile = "/tmp/gunicorn.pid"
 user = 1001
 group = 1001
 tmp_upload_dir = None
@@ -40,10 +40,7 @@ tmp_upload_dir = None
 # certfile = None
 
 # Environment
-raw_env = [
-    f'FLASK_ENV=production',
-    f'PYTHONPATH=/app'
-]
+raw_env = [f"FLASK_ENV=production", f"PYTHONPATH=/app"]
 
 # Preload app for better performance
 preload_app = True
