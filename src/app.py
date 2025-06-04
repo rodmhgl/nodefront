@@ -16,7 +16,7 @@ from datetime import datetime
 from pathlib import Path
 
 import psutil
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, jsonify, render_template_string, request
 
 # Configure production-ready logging
 logging.basicConfig(
