@@ -17,6 +17,7 @@ from pathlib import Path
 
 import psutil
 from flask import Flask, jsonify, render_template_string, request
+from prometheus_client import Counter, Gauge, Histogram, generate_latest
 
 # Configure production-ready logging
 logging.basicConfig(
@@ -43,6 +44,18 @@ app.config.update(
 
 # Application start time for uptime calculation
 START_TIME = time.time()
+
+# Prometheus metrics
+REQUEST_COUNT = Counter(
+    "flask_app_requests_total", "Total number of requests", ["method", "endpoint", "status"]
+)
+REQUEST_DURATION = Histogram(
+    "flask_app_request_duration_seconds", "Request latency", ["method", "endpoint"]
+)
+MEMORY_USAGE_GAUGE = Gauge("flask_app_memory_usage_bytes", "Current memory usage in bytes")
+CPU_USAGE_GAUGE = Gauge("flask_app_cpu_usage_percent", "Current CPU usage percentage")
+UPTIME_GAUGE = Gauge("flask_app_uptime_seconds", "Application uptime in seconds")
+ACTIVE_REQUESTS = Gauge("flask_app_active_requests", "Number of active requests")
 
 
 def is_production():
@@ -551,6 +564,22 @@ def api_env():
     )
 
 
+@app.route("/metrics")
+def metrics():
+    """Prometheus metrics endpoint"""
+    # Update gauge metrics with current values
+    try:
+        process = psutil.Process()
+        MEMORY_USAGE_GAUGE.set(process.memory_info().rss)
+        CPU_USAGE_GAUGE.set(process.cpu_percent(interval=0.1))
+        UPTIME_GAUGE.set(time.time() - START_TIME)
+    except Exception as e:
+        logger.warning(f"Error updating metrics: {e}")
+
+    # Generate and return metrics in Prometheus format
+    return generate_latest(), 200, {"Content-Type": "text/plain; charset=utf-8"}
+
+
 @app.errorhandler(404)
 def not_found(error):
     """404 error handler"""
@@ -594,3 +623,29 @@ if __name__ == "__main__":
         logger.warning("⚠️  Using development server in production! Please use Gunicorn.")
 
     app.run(host="0.0.0.0", port=port, debug=debug)
+
+
+# Middleware for request tracking
+@app.before_request
+def before_request():
+    """Track request start time and increment active requests"""
+    request.start_time = time.time()
+    ACTIVE_REQUESTS.inc()
+
+
+@app.after_request
+def after_request(response):
+    """Track request metrics after processing"""
+    if hasattr(request, "start_time"):
+        # Calculate request duration
+        duration = time.time() - request.start_time
+        endpoint = request.endpoint or "unknown"
+        
+        # Update metrics
+        REQUEST_DURATION.labels(method=request.method, endpoint=endpoint).observe(duration)
+        REQUEST_COUNT.labels(
+            method=request.method, endpoint=endpoint, status=response.status_code
+        ).inc()
+    
+    ACTIVE_REQUESTS.dec()
+    return response

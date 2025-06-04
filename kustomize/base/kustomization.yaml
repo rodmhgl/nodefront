@@ -9,6 +9,7 @@ resources:
 - pvc.yaml
 - hpa.yaml
 - secret-provider-class.yaml
+- servicemonitor.yaml
 
 labels:
 - includeSelectors: true
