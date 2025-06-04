@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Production-Ready Flask Application
-Updated version that works properly in production environments
+Updated version that works properly for production environments
 """
 
 import json
