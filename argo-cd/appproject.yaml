@@ -10,7 +10,7 @@ spec:
   
   # Source repositories
   sourceRepos:
-    - 'https://github.com/rodstewart/nodefront.git'  # Update with your repository URL
+    - 'https://github.com/rodmhgl/nodefront.git'  # Update with your repository URL
   
   # Allowed destinations
   destinations:

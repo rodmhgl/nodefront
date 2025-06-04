@@ -12,7 +12,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/rodstewart/nodefront.git  # Update with your repository URL
+    repoURL: https://github.com/rodmhgl/nodefront.git  # Update with your repository URL
     targetRevision: main
     path: kustomize/overlays/production
   destination:
