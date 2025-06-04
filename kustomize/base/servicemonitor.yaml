@@ -1,17 +1,17 @@
-kind: ServiceMonitor
-apiVersion: monitoring.coreos.com/v1
-metadata:
-  name: myapp-metrics
-  labels:
-    app: myapp
-    monitoring: prometheus
-spec:
-  selector:
-    matchLabels:
-      app: myapp
-  endpoints:
-  - port: http
-    path: /metrics
-    interval: 30s
-    scrapeTimeout: 10s
-    scheme: http
+# kind: ServiceMonitor
+# apiVersion: monitoring.coreos.com/v1
+# metadata:
+#   name: myapp-metrics
+#   labels:
+#     app: myapp
+#     monitoring: prometheus
+# spec:
+#   selector:
+#     matchLabels:
+#       app: myapp
+#   endpoints:
+#   - port: http
+#     path: /metrics
+#     interval: 30s
+#     scrapeTimeout: 10s
+#     scheme: http
