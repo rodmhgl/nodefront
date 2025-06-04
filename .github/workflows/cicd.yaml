@@ -9,6 +9,7 @@ on:
       - requirements-dev.txt
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   ci:
