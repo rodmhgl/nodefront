@@ -1,7 +1,7 @@
-apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
+apiVersion: autoscaling/v2
 metadata:
   name: myapp-hpa
 spec:
   minReplicas: 2
-  maxReplicas: 4
+  maxReplicas: 8

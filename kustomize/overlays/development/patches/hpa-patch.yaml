@@ -4,4 +4,4 @@ metadata:
   name: myapp-hpa
 spec:
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 2

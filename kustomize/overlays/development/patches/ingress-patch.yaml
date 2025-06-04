@@ -1,9 +1,7 @@
-apiVersion: networking.k8s.io/v1
 kind: Ingress
+apiVersion: networking.k8s.io/v1
 metadata:
   name: myapp-ingress
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-nonprod-dns
 spec:
   rules:
     - host: myapp-development.azurelaboratory.com
