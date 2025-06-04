@@ -4,19 +4,19 @@ Production-Ready Flask Application
 Updated version that works properly in a production environment
 """
 
-import os
-import sys
 import json
-import time
+import logging
+import os
 import platform
+import signal
 import socket
+import sys
+import time
 from datetime import datetime
 from pathlib import Path
-import signal
-import logging
 
-from flask import Flask, request, jsonify, render_template_string
 import psutil
+from flask import Flask, request, jsonify, render_template_string
 
 # Configure production-ready logging
 logging.basicConfig(
