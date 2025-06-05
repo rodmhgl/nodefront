@@ -398,7 +398,7 @@ def index():
                 </div>
 
                 <div class="section">
-                    <h3>🖥️ Server Information - Random update to trigger CI</h3>
+                    <h3>🖥️ Server Information</h3>
                     <div class="info-item">
                         <div><span class="label">WSGI Server:</span><span class="value">{{ server_mode }}</span></div>
                         <div><span class="label">Production Mode:</span><span class="value">{{ is_production }}</span></div>
