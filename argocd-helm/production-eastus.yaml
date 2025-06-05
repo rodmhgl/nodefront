@@ -11,7 +11,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/yourusername/nodefront.git
+    repoURL: https://github.com/rodmhgl/nodefront.git
     targetRevision: main
     path: helm/myapp
     helm:

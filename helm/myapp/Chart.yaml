@@ -4,9 +4,9 @@ description: A Flask application with Kubernetes deployment
 type: application
 version: 0.1.0
 appVersion: "1.0.0"
-home: https://github.com/yourusername/nodefront
+home: https://github.com/rodmhgl/nodefront
 sources:
-  - https://github.com/yourusername/nodefront
+  - https://github.com/rodmhgl/nodefront
 maintainers:
   - name: Your Name
     email: your.email@example.com
