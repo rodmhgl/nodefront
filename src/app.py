@@ -14,13 +14,11 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
+from threading import Lock
 
 import psutil
 from flask import Flask, jsonify, render_template_string, request
 from prometheus_client import Counter, Gauge, Histogram, generate_latest
-
-import time
-from threading import Lock
 
 # Cache configuration
 CACHE_TTL_CPU = 5  # Cache CPU data for 5 seconds
