@@ -17,21 +17,34 @@ replicas:
   - name: myapp
     count: 1
 
-# Development-specific configuration
-configMapGenerator:
-  - name: myapp-config
-    behavior: merge
-    literals:
-      - ENVIRONMENT=development
-      - BG_COLOR=white
-      - FONT_COLOR=black
-      - DEBUG=true
-      - LOG_LEVEL=DEBUG
-      - GUNICORN_WORKERS=1
-      - GUNICORN_RELOAD=true
 
 # Development patches
 patches:
+  - target:
+      kind: ConfigMap
+      name: myapp-config
+    patch: |-
+      - op: replace
+        path: /data/ENVIRONMENT
+        value: development
+      - op: replace
+        path: /data/BG_COLOR
+        value: white
+      - op: replace
+        path: /data/FONT_COLOR
+        value: black
+      - op: replace
+        path: /data/DEBUG
+        value: "true"
+      - op: replace
+        path: /data/LOG_LEVEL
+        value: DEBUG
+      - op: replace
+        path: /data/GUNICORN_WORKERS
+        value: "1"
+      - op: add
+        path: /data/GUNICORN_RELOAD
+        value: "true"
   - target:
       kind: Deployment
       name: myapp

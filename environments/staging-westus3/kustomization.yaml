@@ -12,22 +12,37 @@ images:
   - name: rodstewart/nodefront
     newTag: v1.0.0
 
-# Staging configuration
-configMapGenerator:
-  - name: myapp-config
-    behavior: merge
-    literals:
-      - ENVIRONMENT=staging
-      - BG_COLOR=grey
-      - FONT_COLOR=white
-      - DEBUG=false
-      - LOG_LEVEL=INFO
-      - GUNICORN_WORKERS=2
-      - GUNICORN_THREADS=4
-      - REGION=westus3
 
 # Staging West patches
 patches:
+  - target:
+      kind: ConfigMap
+      name: myapp-config
+    patch: |-
+      - op: replace
+        path: /data/ENVIRONMENT
+        value: staging
+      - op: replace
+        path: /data/BG_COLOR
+        value: grey
+      - op: replace
+        path: /data/FONT_COLOR
+        value: white
+      - op: replace
+        path: /data/DEBUG
+        value: "false"
+      - op: replace
+        path: /data/LOG_LEVEL
+        value: INFO
+      - op: replace
+        path: /data/GUNICORN_WORKERS
+        value: "2"
+      - op: replace
+        path: /data/GUNICORN_THREADS
+        value: "4"
+      - op: add
+        path: /data/REGION
+        value: westus3
   - target:
       kind: Deployment
       name: myapp
