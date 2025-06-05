@@ -87,5 +87,21 @@ patches:
       name: myapp-page-files-pv
     patch: |-
       - op: replace
+        path: /metadata/name
+        value: production-eastus-myapp-page-files-pv
+      - op: replace
+        path: /metadata/labels/usage
+        value: production-eastus-myapp-storage-claim
+      - op: replace
         path: /spec/azureFile/shareName
         value: app-pages-prod-eastus
+  - target:
+      kind: PersistentVolumeClaim
+      name: myapp-page-files-pvc
+    patch: |-
+      - op: replace
+        path: /spec/volumeName
+        value: production-eastus-myapp-page-files-pv
+      - op: replace
+        path: /spec/selector/matchLabels/usage
+        value: production-eastus-myapp-storage-claim

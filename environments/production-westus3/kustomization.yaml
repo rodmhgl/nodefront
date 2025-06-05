@@ -87,5 +87,21 @@ patches:
       name: myapp-page-files-pv
     patch: |-
       - op: replace
+        path: /metadata/name
+        value: production-westus3-myapp-page-files-pv
+      - op: replace
+        path: /metadata/labels/usage
+        value: production-westus3-myapp-storage-claim
+      - op: replace
         path: /spec/azureFile/shareName
         value: app-pages-prod-westus3
+  - target:
+      kind: PersistentVolumeClaim
+      name: myapp-page-files-pvc
+    patch: |-
+      - op: replace
+        path: /spec/volumeName
+        value: production-westus3-myapp-page-files-pv
+      - op: replace
+        path: /spec/selector/matchLabels/usage
+        value: production-westus3-myapp-storage-claim
