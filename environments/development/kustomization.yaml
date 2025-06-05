@@ -10,7 +10,7 @@ resources:
 # Development-specific image
 images:
   - name: rodstewart/nodefront
-    newTag: develop-latest
+    newTag: main
 
 # Development-specific replicas
 replicas:
