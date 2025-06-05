@@ -43,7 +43,7 @@ ingress:
   enabled: true
   className: "nginx"
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    cert-manager.io/cluster-issuer: "letsencrypt-nonprod-dns"
     nginx.ingress.kubernetes.io/rewrite-target: /
   hosts:
     - host: myapp.example.com
