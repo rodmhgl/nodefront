@@ -12,7 +12,5 @@ resources:
 - secret-provider-class.yaml
 - servicemonitor.yaml
 
-labels:
-- includeSelectors: true
-  pairs:
-    app: myapp
+commonLabels:
+  app: myapp
