@@ -39,9 +39,6 @@ patches:
       - op: add
         path: /spec/template/metadata/labels/region
         value: westus3
-      - op: replace
-        path: /spec/template/spec/volumes/1/csi/volumeAttributes/secretProviderClass
-        value: prod-myapp-secret-provider-class
   - target:
       kind: Ingress
       name: myapp-ingress
