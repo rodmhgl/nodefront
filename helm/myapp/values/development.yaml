@@ -1,4 +1,6 @@
 # Development environment values
+# Standalone configuration (no layering needed)
+
 environment: development
 bgColor: white
 fontColor: black
@@ -16,6 +18,11 @@ gunicorn:
   reload: "true"
 
 ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rewrite-target: /
   hosts:
     - host: myapp-development.azurelaboratory.com
       paths:
@@ -27,8 +34,11 @@ ingress:
         - myapp-development.azurelaboratory.com
 
 autoscaling:
+  enabled: true
   minReplicas: 1
   maxReplicas: 2
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
 
 persistence:
   shareName: app-pages-dev

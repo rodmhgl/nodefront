@@ -21,31 +21,89 @@ This Helm chart deploys the Flask-based MyApp application to Kubernetes.
   - cert-manager (for TLS certificates)
   - Secret Store CSI driver (for Azure Key Vault)
 
-### Basic Installation
+### Hierarchical Values Installation
+
+This chart uses a layered values approach:
+- **Base defaults**: `values.yaml`
+- **Environment layer**: `staging.yaml` or `production.yaml`
+- **Region layer**: `staging-eastus.yaml`, `production-westus3.yaml`, etc.
 
 ```bash
-# Install with default values
-helm install myapp ./helm/myapp
+# Development (standalone)
+helm install myapp-dev ./helm/myapp \
+  -f ./helm/myapp/values/development.yaml \
+  -n development --create-namespace
 
-# Install with environment-specific values
-helm install myapp-dev ./helm/myapp -f ./helm/myapp/values/development.yaml -n development
+# Staging East US (layered: defaults -> staging -> region)
+helm install myapp-staging-east ./helm/myapp \
+  -f ./helm/myapp/values/staging.yaml \
+  -f ./helm/myapp/values/staging-eastus.yaml \
+  -n staging-eastus --create-namespace
 
-# Install for staging east
-helm install myapp-staging ./helm/myapp -f ./helm/myapp/values/staging-eastus.yaml -n staging-eastus
+# Staging West US3 (layered: defaults -> staging -> region)
+helm install myapp-staging-west ./helm/myapp \
+  -f ./helm/myapp/values/staging.yaml \
+  -f ./helm/myapp/values/staging-westus3.yaml \
+  -n staging-westus3 --create-namespace
 
-# Install for production
-helm install myapp-prod ./helm/myapp -f ./helm/myapp/values/production-eastus.yaml -n production-eastus
+# Production East US (layered: defaults -> production -> region)
+helm install myapp-prod-east ./helm/myapp \
+  -f ./helm/myapp/values/production.yaml \
+  -f ./helm/myapp/values/production-eastus.yaml \
+  -n production-eastus --create-namespace
+
+# Production West US3 (layered: defaults -> production -> region)
+helm install myapp-prod-west ./helm/myapp \
+  -f ./helm/myapp/values/production.yaml \
+  -f ./helm/myapp/values/production-westus3.yaml \
+  -n production-westus3 --create-namespace
 ```
 
 ### Template Generation (for testing)
 
 ```bash
-# Generate templates for development
-helm template myapp-dev ./helm/myapp -f ./helm/myapp/values/development.yaml
+# Development
+helm template myapp-dev ./helm/myapp \
+  -f ./helm/myapp/values/development.yaml
 
-# Generate templates for staging
-helm template myapp-staging ./helm/myapp -f ./helm/myapp/values/staging-eastus.yaml
+# Staging East with layered values
+helm template myapp-staging-east ./helm/myapp \
+  -f ./helm/myapp/values/staging.yaml \
+  -f ./helm/myapp/values/staging-eastus.yaml
+
+# Production West with layered values
+helm template myapp-prod-west ./helm/myapp \
+  -f ./helm/myapp/values/production.yaml \
+  -f ./helm/myapp/values/production-westus3.yaml
 ```
+
+## Hierarchical Values Structure
+
+The chart uses a three-layer values hierarchy:
+
+### Values Files Structure
+
+```
+values/
+├── development.yaml     # Standalone dev configuration
+├── staging.yaml        # Common staging settings
+├── production.yaml     # Common production settings
+├── staging-eastus.yaml # Staging East region overrides
+├── staging-westus3.yaml # Staging West region overrides
+├── production-eastus.yaml # Production East region overrides
+└── production-westus3.yaml # Production West region overrides
+```
+
+### Value Inheritance Flow
+
+1. **Base defaults** (`values.yaml`)
+2. **Environment layer** (`staging.yaml` or `production.yaml`)
+3. **Region layer** (`*-eastus.yaml` or `*-westus3.yaml`)
+
+Each layer overrides the previous, allowing for:
+- **Common environment settings** (all staging regions share staging.yaml)
+- **Region-specific overrides** (hostnames, storage shares)
+- **Minimal duplication** (change staging config once, affects all regions)
 
 ## Configuration
 

@@ -1,20 +1,5 @@
-# Staging East US environment values
-environment: staging
-bgColor: grey
-fontColor: white
-debug: "false"
-logLevel: INFO
-sdlc: staging
+# Staging East US region-specific configuration
 region: eastus
-
-image:
-  tag: v1.0.0
-
-replicaCount: 1
-
-gunicorn:
-  workers: "2"
-  threads: "4"
 
 ingress:
   hosts:
@@ -26,10 +11,6 @@ ingress:
     - secretName: myapp-tls
       hosts:
         - myapp-staging-eastus.azurelaboratory.com
-
-autoscaling:
-  minReplicas: 1
-  maxReplicas: 5
 
 persistence:
   shareName: app-pages-staging-eastus

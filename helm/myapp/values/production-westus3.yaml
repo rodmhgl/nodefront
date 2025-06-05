@@ -1,21 +1,5 @@
-# Production West US3 environment values
-environment: production
-bgColor: black
-fontColor: white
-debug: "false"
-logLevel: WARNING
-sdlc: production
+# Production West US3 region-specific configuration
 region: westus3
-
-image:
-  tag: v1.0.0
-
-replicaCount: 2
-
-gunicorn:
-  workers: "4"
-  threads: "8"
-  timeout: "300"
 
 ingress:
   hosts:
@@ -27,10 +11,6 @@ ingress:
     - secretName: myapp-tls
       hosts:
         - myapp-prod-westus3.azurelaboratory.com
-
-autoscaling:
-  minReplicas: 2
-  maxReplicas: 8
 
 persistence:
   shareName: app-pages-prod-westus3

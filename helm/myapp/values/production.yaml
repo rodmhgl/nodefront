@@ -1,0 +1,45 @@
+# Production environment base configuration
+# Common settings for all production regions
+
+environment: production
+bgColor: black
+fontColor: white
+debug: "false"
+logLevel: WARNING
+sdlc: production
+
+image:
+  tag: v1.0.0
+
+replicaCount: 2
+
+gunicorn:
+  workers: "4"
+  threads: "8"
+  timeout: "300"
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 8
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+# Base production ingress configuration (will be overridden by region)
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  tls:
+    - secretName: myapp-tls
+
+# Production-specific resource limits
+resources:
+  requests:
+    memory: "128Mi"
+    cpu: "50m"
+  limits:
+    memory: "256Mi"
+    cpu: "200m"
