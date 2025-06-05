@@ -1,0 +1,17 @@
+apiVersion: v2
+name: myapp
+description: A Flask application with Kubernetes deployment
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+home: https://github.com/yourusername/nodefront
+sources:
+  - https://github.com/yourusername/nodefront
+maintainers:
+  - name: Your Name
+    email: your.email@example.com
+keywords:
+  - flask
+  - python
+  - kubernetes
+  - webapp

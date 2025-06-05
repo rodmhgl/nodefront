@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "myapp.fullname" . }}-config
+  labels:
+    {{- include "myapp.labels" . | nindent 4 }}
+data:
+  ENVIRONMENT: {{ .Values.environment | quote }}
+  BG_COLOR: {{ .Values.bgColor | quote }}
+  FONT_COLOR: {{ .Values.fontColor | quote }}
+  FLASK_ENV: {{ .Values.flaskEnv | quote }}
+  DEBUG: {{ .Values.debug | quote }}
+  LOG_LEVEL: {{ .Values.logLevel | quote }}
+  GUNICORN_WORKERS: {{ .Values.gunicorn.workers | quote }}
+  {{- if .Values.gunicorn.threads }}
+  GUNICORN_THREADS: {{ .Values.gunicorn.threads | quote }}
+  {{- end }}
+  {{- if .Values.gunicorn.timeout }}
+  GUNICORN_TIMEOUT: {{ .Values.gunicorn.timeout | quote }}
+  {{- end }}
+  {{- if .Values.gunicorn.reload }}
+  GUNICORN_RELOAD: {{ .Values.gunicorn.reload | quote }}
+  {{- end }}
+  {{- if .Values.region }}
+  REGION: {{ .Values.region | quote }}
+  {{- end }}

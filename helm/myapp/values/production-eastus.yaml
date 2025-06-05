@@ -1,0 +1,36 @@
+# Production East US environment values
+environment: production
+bgColor: black
+fontColor: white
+debug: "false"
+logLevel: WARNING
+sdlc: production
+region: eastus
+
+image:
+  tag: v1.0.0
+
+replicaCount: 2
+
+gunicorn:
+  workers: "4"
+  threads: "8"
+  timeout: "300"
+
+ingress:
+  hosts:
+    - host: myapp-prod-eastus.azurelaboratory.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: myapp-tls
+      hosts:
+        - myapp-prod-eastus.azurelaboratory.com
+
+autoscaling:
+  minReplicas: 2
+  maxReplicas: 8
+
+persistence:
+  shareName: app-pages-prod-eastus

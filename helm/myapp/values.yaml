@@ -1,0 +1,87 @@
+# Default values for myapp.
+# This is a YAML-formatted file.
+# Declare variables to be substituted into your templates.
+
+replicaCount: 1
+
+image:
+  repository: rodstewart/nodefront
+  pullPolicy: IfNotPresent
+  tag: ""
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Application configuration
+environment: base
+bgColor: "#1e3a8a"
+fontColor: "#ffffff"
+flaskEnv: production
+debug: "false"
+logLevel: INFO
+
+# SDLC and region labels
+sdlc: ""
+region: ""
+
+# Gunicorn configuration
+gunicorn:
+  workers: "2"
+  threads: ""
+  timeout: ""
+  reload: ""
+
+serviceAccount:
+  create: false
+  name: "default"
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - host: myapp.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: myapp-tls
+      hosts:
+        - myapp.example.com
+
+resources:
+  requests:
+    memory: "64Mi"
+    cpu: "20m"
+  limits:
+    memory: "128Mi"
+    cpu: "60m"
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+# Persistence configuration
+persistence:
+  enabled: true
+  storageClassName: azurefile
+  size: 1Gi
+  reclaimPolicy: Retain
+  secretName: azure-pv-secret  # Consistent across all environments
+  shareName: app-pages         # Override per environment
+
+# Secret store configuration (Azure Key Vault)
+secretStore:
+  enabled: true
+  userAssignedIdentityID: "0cc3d584-5d58-40e7-a9f8-f6f50c8d5adb"
+  keyvaultName: "tfstate-rn"
+  tenantId: "d3164c0e-9807-4863-a439-becceb8459d9"

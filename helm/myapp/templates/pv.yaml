@@ -1,0 +1,20 @@
+{{- if .Values.persistence.enabled -}}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "myapp.fullname" . }}-page-files-pv
+  labels:
+    {{- include "myapp.labels" . | nindent 4 }}
+    usage: {{ include "myapp.fullname" . }}-storage-claim
+spec:
+  storageClassName: {{ .Values.persistence.storageClassName }}
+  capacity:
+    storage: {{ .Values.persistence.size }}
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: {{ .Values.persistence.reclaimPolicy }}
+  azureFile:
+    secretName: {{ .Values.persistence.secretName }}
+    shareName: {{ .Values.persistence.shareName }}
+    readOnly: false
+{{- end }}
