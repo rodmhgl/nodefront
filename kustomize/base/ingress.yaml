@@ -5,7 +5,7 @@ metadata:
   labels:
     name: myapp-ingress
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod-dns
+    cert-manager.io/cluster-issuer: letsencrypt-nonprod-dns
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
     nginx.ingress.kubernetes.io/ssl-passthrough: "true"
 spec:
