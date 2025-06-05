@@ -4,8 +4,15 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 namePrefix: dev-
 namespace: development
 
+# Include all base resources except SecretProviderClass
 resources:
-  - ../../base
+  - ../../base/configmap.yaml
+  - ../../base/deployment.yaml
+  - ../../base/service.yaml
+  - ../../base/ingress.yaml
+  - ../../base/pv.yaml
+  - ../../base/pvc.yaml
+  - ../../base/hpa.yaml
 
 # Development-specific image
 images:
