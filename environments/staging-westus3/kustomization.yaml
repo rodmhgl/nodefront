@@ -1,0 +1,85 @@
+kind: Kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+
+namePrefix: staging-
+namespace: staging-westus3
+
+resources:
+  - ../../base
+
+# Staging West-specific image
+images:
+  - name: rodstewart/nodefront
+    newTag: v1.0.0
+
+
+# Staging West patches
+patches:
+  - target:
+      kind: ConfigMap
+      name: myapp-config
+    patch: |-
+      - op: replace
+        path: /data/ENVIRONMENT
+        value: staging
+      - op: replace
+        path: /data/BG_COLOR
+        value: grey
+      - op: replace
+        path: /data/FONT_COLOR
+        value: white
+      - op: replace
+        path: /data/DEBUG
+        value: "false"
+      - op: replace
+        path: /data/LOG_LEVEL
+        value: INFO
+      - op: replace
+        path: /data/GUNICORN_WORKERS
+        value: "2"
+      - op: replace
+        path: /data/GUNICORN_THREADS
+        value: "4"
+      - op: add
+        path: /data/REGION
+        value: westus3
+  - target:
+      kind: Deployment
+      name: myapp
+    patch: |-
+      - op: add
+        path: /spec/template/metadata/labels/sdlc
+        value: staging
+      - op: add
+        path: /spec/template/metadata/labels/region
+        value: westus3
+  - target:
+      kind: Ingress
+      name: myapp-ingress
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: myapp-staging-westus3.azurelaboratory.com
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: myapp-staging-westus3.azurelaboratory.com
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: myapp-hpa
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 1
+      - op: replace
+        path: /spec/maxReplicas
+        value: 5
+  - target:
+      kind: PersistentVolume
+      name: myapp-page-files-pv
+    patch: |-
+      - op: replace
+        path: /spec/azureFile/secretName
+        value: azure-pv-secret-westus3
+      - op: replace
+        path: /spec/azureFile/shareName
+        value: app-pages-staging-westus3

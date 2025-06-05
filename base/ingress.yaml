@@ -2,9 +2,16 @@ kind: Ingress
 apiVersion: networking.k8s.io/v1
 metadata:
   name: myapp-ingress
+  labels:
+    name: myapp-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-nonprod-dns
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
 spec:
+  ingressClassName: nginx
   rules:
-    - host: myapp-staging.azurelaboratory.com
+    - host: myapp-development.azurelaboratory.com
       http:
         paths:
           - pathType: Prefix
@@ -17,4 +24,4 @@ spec:
   tls:
     - secretName: myapp-tls
       hosts:
-        - myapp-staging.azurelaboratory.com
+        - myapp-development.azurelaboratory.com

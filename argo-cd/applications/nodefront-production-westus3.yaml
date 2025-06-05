@@ -1,43 +1,46 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: nodefront-staging
+  name: nodefront-production-westus3
   namespace: argocd
   labels:
     app: nodefront
-    environment: staging
+    environment: production
+    region: westus3
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
-    repoURL: https://github.com/rodmhgl/nodefront.git  # Update with your repository URL
+    repoURL: https://github.com/rodmhgl/nodefront.git
     targetRevision: main
-    path: kustomize/overlays/staging
+    path: environments/production-westus3
   destination:
     server: https://kubernetes.default.svc
-    namespace: nodefront-staging
+    namespace: production-westus3
   syncPolicy:
     automated:
-      prune: true
-      selfHeal: true
+      prune: false  # Manual sync for production
+      selfHeal: false
       allowEmpty: false
     syncOptions:
       - CreateNamespace=true
       - PrunePropagationPolicy=foreground
       - PruneLast=true
-      - ApplyOutOfSyncOnly=true
+      - ApplyOutOfSyncOnly=true  # Only sync changed resources
     retry:
       limit: 5
       backoff:
         duration: 5s
         factor: 2
         maxDuration: 3m
-  revisionHistoryLimit: 10
+  revisionHistoryLimit: 20  # Keep more history for production
   info:
     - name: 'Description'
-      value: 'Flask application for displaying environment information - Staging'
+      value: 'Flask application for displaying environment information - Production West US3'
     - name: 'Owner'
       value: 'DevOps Team'
-    - name: 'Environment'
-      value: 'Pre-production staging environment'
+    - name: 'Region'
+      value: 'West US3'
+    - name: 'Criticality'
+      value: 'High'

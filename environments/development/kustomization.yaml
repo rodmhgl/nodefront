@@ -1,0 +1,74 @@
+kind: Kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+
+namePrefix: dev-
+namespace: development
+
+resources:
+  - ../../base
+
+# Development-specific image
+images:
+  - name: rodstewart/nodefront
+    newTag: develop-latest
+
+# Development-specific replicas
+replicas:
+  - name: myapp
+    count: 1
+
+
+# Development patches
+patches:
+  - target:
+      kind: ConfigMap
+      name: myapp-config
+    patch: |-
+      - op: replace
+        path: /data/ENVIRONMENT
+        value: development
+      - op: replace
+        path: /data/BG_COLOR
+        value: white
+      - op: replace
+        path: /data/FONT_COLOR
+        value: black
+      - op: replace
+        path: /data/DEBUG
+        value: "true"
+      - op: replace
+        path: /data/LOG_LEVEL
+        value: DEBUG
+      - op: replace
+        path: /data/GUNICORN_WORKERS
+        value: "1"
+      - op: add
+        path: /data/GUNICORN_RELOAD
+        value: "true"
+  - target:
+      kind: Deployment
+      name: myapp
+    patch: |-
+      - op: add
+        path: /spec/template/metadata/labels/sdlc
+        value: development
+  - target:
+      kind: Ingress
+      name: myapp-ingress
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: myapp-development.azurelaboratory.com
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: myapp-development.azurelaboratory.com
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: myapp-hpa
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 1
+      - op: replace
+        path: /spec/maxReplicas
+        value: 2

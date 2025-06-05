@@ -1,7 +1,0 @@
-kind: HorizontalPodAutoscaler
-apiVersion: autoscaling/v2
-metadata:
-  name: myapp-hpa
-spec:
-  minReplicas: 1
-  maxReplicas: 2

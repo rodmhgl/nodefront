@@ -19,7 +19,7 @@ spec:
       containers:
         - name: myapp
           image: rodstewart/nodefront:main
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           resources:
             requests:
               memory: "64Mi"
