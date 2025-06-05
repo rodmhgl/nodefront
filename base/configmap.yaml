@@ -11,7 +11,7 @@ data:
   # UI Configuration defaults
   BG_COLOR: "#1e3a8a"
   FONT_COLOR: "#ffffff"
-  ENVIRONMENT: "development"
+  ENVIRONMENT: "base"
   
   # Logging configuration
   LOG_LEVEL: "INFO"
