@@ -87,8 +87,5 @@ patches:
       name: myapp-page-files-pv
     patch: |-
       - op: replace
-        path: /spec/azureFile/secretName
-        value: azure-pv-secret-eastus
-      - op: replace
         path: /spec/azureFile/shareName
         value: app-pages-prod-eastus

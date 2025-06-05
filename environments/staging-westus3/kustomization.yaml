@@ -81,8 +81,5 @@ patches:
       name: myapp-page-files-pv
     patch: |-
       - op: replace
-        path: /spec/azureFile/secretName
-        value: azure-pv-secret-westus3
-      - op: replace
         path: /spec/azureFile/shareName
         value: app-pages-staging-westus3
