@@ -19,6 +19,79 @@ import psutil
 from flask import Flask, jsonify, render_template_string, request
 from prometheus_client import Counter, Gauge, Histogram, generate_latest
 
+import time
+from threading import Lock
+
+# Cache configuration
+CACHE_TTL_CPU = 5  # Cache CPU data for 5 seconds
+CACHE_TTL_VOLUMES = 30  # Cache volume listings for 30 seconds
+CACHE_TTL_SYSTEM = 10  # Cache system info for 10 seconds
+
+# Thread-safe cache storage
+_cache = {}
+_cache_lock = Lock()
+
+
+def _get_cached_or_compute(cache_key, ttl_seconds, compute_func, *args):
+    """Generic thread-safe caching function"""
+    current_time = time.time()
+
+    with _cache_lock:
+        if cache_key in _cache:
+            data, timestamp = _cache[cache_key]
+            if current_time - timestamp < ttl_seconds:
+                return data
+
+    # Cache miss or expired - compute new value
+    try:
+        new_data = compute_func(*args)
+        with _cache_lock:
+            _cache[cache_key] = (new_data, current_time)
+        return new_data
+    except Exception as e:
+        logger.error(f"Error computing {cache_key}: {e}")
+        # Return stale data if available, otherwise re-raise
+        with _cache_lock:
+            if cache_key in _cache:
+                data, _ = _cache[cache_key]
+                logger.warning(f"Using stale data for {cache_key}")
+                return data
+        raise
+
+
+def _compute_cpu_info():
+    """Compute CPU information - this is the expensive operation"""
+    try:
+        return {
+            "count": psutil.cpu_count(),
+            "percent": psutil.cpu_percent(interval=1),  # This blocks for 1 second
+            "load_avg": os.getloadavg() if hasattr(os, "getloadavg") else [0, 0, 0],
+        }
+    except Exception as e:
+        logger.error(f"Error getting CPU info: {e}")
+        return {"count": 1, "percent": 0, "load_avg": [0, 0, 0]}
+
+
+def _compute_volume_info():
+    """Compute volume information - potentially expensive I/O"""
+    return {"shared_files": safe_read_dir("/app/share"), "secret_store": safe_read_dir("/mnt/secret-store")}
+
+
+def _compute_memory_info():
+    """Compute memory information - kept separate as it's fast"""
+    try:
+        memory = psutil.virtual_memory()
+        return {
+            "total": round(memory.total / 1024 / 1024),
+            "available": round(memory.available / 1024 / 1024),
+            "used": round(memory.used / 1024 / 1024),
+            "percent": memory.percent,
+        }
+    except Exception as e:
+        logger.error(f"Error getting memory info: {e}")
+        return {"total": 0, "available": 0, "used": 0, "percent": 0}
+
+
 # Configure production-ready logging
 logging.basicConfig(
     level=logging.INFO,
@@ -89,31 +162,13 @@ def safe_read_dir(dir_path):
 
 
 def get_memory_info():
-    """Get memory information in MB"""
-    try:
-        memory = psutil.virtual_memory()
-        return {
-            "total": round(memory.total / 1024 / 1024),
-            "available": round(memory.available / 1024 / 1024),
-            "used": round(memory.used / 1024 / 1024),
-            "percent": memory.percent,
-        }
-    except Exception as e:
-        logger.error(f"Error getting memory info: {e}")
-        return {"total": 0, "available": 0, "used": 0, "percent": 0}
+    """Get memory information - no caching needed as it's fast"""
+    return _compute_memory_info()
 
 
 def get_cpu_info():
-    """Get CPU information"""
-    try:
-        return {
-            "count": psutil.cpu_count(),
-            "percent": psutil.cpu_percent(interval=1),
-            "load_avg": os.getloadavg() if hasattr(os, "getloadavg") else [0, 0, 0],
-        }
-    except Exception as e:
-        logger.error(f"Error getting CPU info: {e}")
-        return {"count": 1, "percent": 0, "load_avg": [0, 0, 0]}
+    """Get CPU information with caching"""
+    return _get_cached_or_compute("cpu_info", CACHE_TTL_CPU, _compute_cpu_info)
 
 
 def get_process_info():
@@ -155,6 +210,11 @@ def get_server_info():
     }
 
 
+def get_volume_info():
+    """Get volume information with caching"""
+    return _get_cached_or_compute("volume_info", CACHE_TTL_VOLUMES, _compute_volume_info)
+
+
 def adjust_color(color, amount):
     """Adjust color brightness"""
     try:
@@ -170,9 +230,10 @@ def adjust_color(color, amount):
 
 
 def get_environment_info():
-    """Collect comprehensive environment information"""
-    memory_info = get_memory_info()
-    cpu_info = get_cpu_info()
+    """Collect comprehensive environment information with caching"""
+    memory_info = get_memory_info()  # Fast, no cache needed
+    cpu_info = get_cpu_info()  # Cached
+    volume_info = get_volume_info()  # Cached
     process_info = get_process_info()
     server_info = get_server_info()
 
@@ -212,7 +273,7 @@ def get_environment_info():
             "memory_percent": memory_info["percent"],
         },
         "process": process_info,
-        "volumes": {"shared_files": safe_read_dir("/app/share"), "secret_store": safe_read_dir("/mnt/secret-store")},
+        "volumes": volume_info,  # Now cached
         "environment_variables": dict(sorted(env_vars.items())),
     }
 
@@ -251,6 +312,35 @@ def health_check():
     """
 
     return html_content, 200, {"Content-Type": "text/html"}
+
+
+@app.route("/cache/status")
+def cache_status():
+    """Debug endpoint to show cache status"""
+    current_time = time.time()
+    status = {}
+
+    with _cache_lock:
+        for key, (data, timestamp) in _cache.items():
+            age = current_time - timestamp
+            status[key] = {
+                "age_seconds": round(age, 2),
+                "data_size": len(str(data)),
+                "is_fresh": age < globals().get(f"CACHE_TTL_{key.upper()}", 60),
+            }
+
+    return jsonify({"cache_entries": len(_cache), "details": status, "timestamp": datetime.now().isoformat()})
+
+
+# Optional: Cache clear endpoint for debugging
+@app.route("/cache/clear", methods=["POST"])
+def clear_cache():
+    """Debug endpoint to clear cache"""
+    with _cache_lock:
+        cleared_count = len(_cache)
+        _cache.clear()
+
+    return jsonify({"cleared_entries": cleared_count, "timestamp": datetime.now().isoformat()})
 
 
 @app.route("/")
