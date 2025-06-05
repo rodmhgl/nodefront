@@ -53,6 +53,9 @@ patches:
       - op: add
         path: /spec/template/metadata/labels/region
         value: eastus
+      - op: replace
+        path: /spec/template/spec/volumes/1/csi/volumeAttributes/secretProviderClass
+        value: staging-myapp-secret-provider-class
   - target:
       kind: Ingress
       name: myapp-ingress
