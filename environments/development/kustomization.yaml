@@ -12,10 +12,8 @@ images:
   - name: rodstewart/nodefront
     newTag: main
 
-# Development-specific replicas
-replicas:
-  - name: myapp
-    count: 1
+# Development-specific replicas - handled by HPA
+# replicas field removed to avoid conflict with HPA
 
 
 # Development patches
@@ -49,6 +47,8 @@ patches:
       kind: Deployment
       name: myapp
     patch: |-
+      - op: remove
+        path: /spec/replicas
       - op: add
         path: /spec/template/metadata/labels/sdlc
         value: development
