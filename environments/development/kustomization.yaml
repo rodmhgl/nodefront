@@ -37,7 +37,7 @@ patches:
       name: myapp
     patch: |-
       - op: add
-        path: /spec/template/metadata/labels/SDLC
+        path: /spec/template/metadata/labels/sdlc
         value: development
   - target:
       kind: Ingress
