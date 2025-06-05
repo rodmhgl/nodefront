@@ -52,6 +52,9 @@ patches:
       - op: add
         path: /spec/template/metadata/labels/sdlc
         value: development
+      - op: replace
+        path: /spec/template/spec/volumes/1/csi/volumeAttributes/secretProviderClass
+        value: dev-myapp-secret-provider-class
   - target:
       kind: Ingress
       name: myapp-ingress
