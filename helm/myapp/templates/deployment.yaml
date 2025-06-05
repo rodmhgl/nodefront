@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "myapp.fullname" . }}
+  labels:
+    {{- include "myapp.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "myapp.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "myapp.selectorLabels" . | nindent 8 }}
+        {{- if .Values.sdlc }}
+        sdlc: {{ .Values.sdlc }}
+        {{- end }}
+        {{- if .Values.region }}
+        region: {{ .Values.region }}
+        {{- end }}
+        appid: "123456"
+    spec:
+      automountServiceAccountToken: false
+      serviceAccountName: {{ .Values.serviceAccount.name | default "default" }}
+      nodeSelector:
+        kubernetes.io/os: linux
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          ports:
+            - containerPort: 3000
+          livenessProbe:
+            httpGet:
+              path: /healthcheck.html?probe=live
+              port: 3000
+            periodSeconds: 60
+            failureThreshold: 2
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /healthcheck.html?probe=ready
+              port: 3000
+            periodSeconds: 15
+            failureThreshold: 4
+            timeoutSeconds: 2
+          startupProbe:
+            httpGet:
+              path: /healthcheck.html?probe=startup
+              port: 3000
+            periodSeconds: 30
+            failureThreshold: 3
+            timeoutSeconds: 5
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            runAsGroup: 1001
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: page-files
+              mountPath: /app/share
+            {{- if .Values.secretStore.enabled }}
+            - name: secret-store
+              mountPath: /mnt/secret-store
+            {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "myapp.fullname" . }}-config
+          env:
+            - name: FROM_FIELD
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            {{- if .Values.secretStore.enabled }}
+            - name: FROM_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: myapp-secret-key
+                  name: myapp-secret-key
+            {{- end }}
+      volumes:
+        - name: page-files
+          persistentVolumeClaim:
+            claimName: {{ include "myapp.fullname" . }}-page-files-pvc
+        {{- if .Values.secretStore.enabled }}
+        - name: secret-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ include "myapp.fullname" . }}-secret-provider-class
+        {{- end }}
