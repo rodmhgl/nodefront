@@ -1,0 +1,42 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nodefront-helm-production-westus3
+  namespace: argocd
+  labels:
+    app: nodefront
+    deployment-method: helm
+    environment: production
+    region: westus3
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/yourusername/nodefront.git
+    targetRevision: main
+    path: helm/myapp
+    helm:
+      valueFiles:
+        - values/production.yaml
+        - values/production-westus3.yaml
+      parameters:
+        - name: image.tag
+          value: v1.0.0
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: production-westus3-helm
+  syncPolicy:
+    automated:
+      prune: false  # Manual sync for production safety
+      selfHeal: false
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m
+  revisionHistoryLimit: 5
