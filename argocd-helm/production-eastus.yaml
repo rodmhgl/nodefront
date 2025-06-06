@@ -11,7 +11,7 @@ metadata:
     environment: production
     region: eastus
 spec:
-  project: default
+  project: nodefront
   source:
     repoURL: https://github.com/rodmhgl/nodefront.git
     targetRevision: main
