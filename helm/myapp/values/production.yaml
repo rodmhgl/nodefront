@@ -9,7 +9,7 @@ logLevel: WARNING
 sdlc: production
 
 image:
-  tag: v1.0.0
+  tag: main-e000970
 
 replicaCount: 2
 

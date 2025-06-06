@@ -7,9 +7,12 @@ fontColor: black
 debug: "true"
 logLevel: DEBUG
 sdlc: development
+
 image:
   tag: main-e000970
+
 replicaCount: 1
+
 gunicorn:
   workers: "1"
   reload: "true"
