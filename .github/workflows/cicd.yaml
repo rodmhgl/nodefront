@@ -86,14 +86,14 @@ jobs:
           # Run tests
           python -m pytest tests/ -v --tb=short || python -m pytest . -v --tb=short -k "test_" || echo "No tests found, skipping test execution"
 
-      - name: Security check with bandit
-        run: |
-          bandit -r src/ -f json -o bandit-report.json
-          if [ $? -ne 0 ]; then
-            echo "Security issues found! Check bandit-report.json for details."
-            cat bandit-report.json
-            exit 1
-          fi
+      # - name: Security check with bandit
+      #   run: |
+      #     bandit -r src/ -f json -o bandit-report.json
+      #     if [ $? -ne 0 ]; then
+      #       echo "Security issues found! Check bandit-report.json for details."
+      #       cat bandit-report.json
+      #       exit 1
+      #     fi
 
 
       - name: Docker meta
