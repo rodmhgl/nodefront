@@ -7,16 +7,12 @@ fontColor: black
 debug: "true"
 logLevel: DEBUG
 sdlc: development
-
 image:
-  tag: develop-latest
-
+  tag: main
 replicaCount: 1
-
 gunicorn:
   workers: "1"
   reload: "true"
-
 ingress:
   enabled: true
   className: "nginx"
@@ -32,13 +28,11 @@ ingress:
     - secretName: myapp-tls
       hosts:
         - myapp-development.azurelaboratory.com
-
 autoscaling:
   enabled: true
   minReplicas: 1
   maxReplicas: 2
   targetCPUUtilizationPercentage: 80
   targetMemoryUtilizationPercentage: 80
-
 persistence:
   shareName: app-pages-dev
