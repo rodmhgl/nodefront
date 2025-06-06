@@ -18,9 +18,6 @@ spec:
       valueFiles:
         - values/staging.yaml
         - values/staging-eastus.yaml
-      parameters:
-        - name: image.tag
-          value: v1.0.0
   destination:
     server: https://kubernetes.default.svc
     namespace: staging-eastus-helm

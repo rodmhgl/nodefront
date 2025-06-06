@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -88,8 +88,12 @@ jobs:
 
       - name: Security check with bandit
         run: |
-          bandit -r src/ -f json -o bandit-report.json || true
-          bandit -r src/ || true
+          bandit -r src/ -f json -o bandit-report.json
+          if [ $? -ne 0 ]; then
+            echo "Security issues found! Check bandit-report.json for details."
+            cat bandit-report.json
+            exit 1
+          fi
 
 
       - name: Docker meta
@@ -122,7 +126,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build and push
-        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0
+        uses: docker/build-push-action@v5
         with:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
@@ -136,43 +140,36 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
-
-      - name: Update Development Environment
-        shell: bash
-        run: |
-          echo "Updating development to: ${{ needs.ci.outputs.docker_meta_version }}"
-          cd environments/development
-          sed -i "s|newTag: .*|newTag: ${{ needs.ci.outputs.docker_meta_version }}|" kustomization.yaml
-
-      - name: Commit and push changes
-        uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5
+        uses: actions/checkout@v4
         with:
-          message: 'Update image tag to ${{ needs.ci.outputs.docker_meta_version }}'
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install ArgoCD CLI
-        shell: bash
+      - name: Install yq
         run: |
-          curl -sSL -o argocd https://argocd.azurelaboratory.com/download/argocd-linux-amd64
-          chmod +x argocd
-          sudo mv ./argocd /usr/local/bin/argocd
+          sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
+          sudo chmod +x /usr/bin/yq
 
-      - name: Argo CD Login
-        shell: bash
+      - name: Update Development Environment Values
         run: |
-          argocd login argocd.azurelaboratory.com \
-            --grpc-web \
-            --username ${{ vars.ARGOCD_USERNAME }} \
-            --password ${{ secrets.ARGOCD_PASSWORD }}
-
-      - name: Ensure Argo CD Repo Exists
-        shell: bash
-        run: |
-          repo="https://github.com/rodmhgl/nodefront.git"
-          argocd repo list | grep -q $repo || argocd repo add $repo
-
-      - name: Ensure Argo CD App Exists
-        shell: bash
-        run: |
-          app=nodefront-development
-          argocd app list | grep -q argocd/$app || argocd app create $app -f argo-cd/applications/nodefront-development.yaml
+          echo "Updating development image tag to: ${{ needs.ci.outputs.docker_meta_version }}"
+          
+          # Get current tag
+          current_tag=$(yq '.image.tag' helm/myapp/values/development.yaml)
+          new_tag="${{ needs.ci.outputs.docker_meta_version }}"
+          
+          echo "Current tag: $current_tag"
+          echo "New tag: $new_tag"
+          
+          if [ "$current_tag" != "$new_tag" ]; then
+            yq -i ".image.tag = \"$new_tag\"" helm/myapp/values/development.yaml
+            echo "Tag updated successfully"
+          else
+            echo "Tag unchanged, skipping update"
+          fi
+      
+      - name: Commit and push changes
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: 'Update image tag in development to ${{ needs.ci.outputs.docker_meta_version }}'
+          add: 'helm/myapp/values/development.yaml'
+          default_author: github_actions

@@ -18,9 +18,6 @@ spec:
       valueFiles:
         - values/production.yaml
         - values/production-eastus.yaml
-      parameters:
-        - name: image.tag
-          value: v1.0.0
   destination:
     server: https://kubernetes.default.svc
     namespace: production-eastus-helm
