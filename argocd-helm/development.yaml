@@ -3,12 +3,14 @@ kind: Application
 metadata:
   name: nodefront-helm-development
   namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
   labels:
     app: nodefront
     deployment-method: helm
     environment: development
 spec:
-  project: default
+  project: nodefront
   source:
     repoURL: https://github.com/rodmhgl/nodefront.git
     targetRevision: main

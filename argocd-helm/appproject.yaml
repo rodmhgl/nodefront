@@ -1,10 +1,10 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: nodefront
-  namespace: argocd
   labels:
     app: nodefront
+  name: nodefront
+  namespace: argocd
 spec:
   clusterResourceWhitelist:
   - group: '*'

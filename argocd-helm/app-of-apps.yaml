@@ -3,12 +3,14 @@ kind: Application
 metadata:
   name: nodefront-helm-apps
   namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
   labels:
     app: nodefront
     deployment-method: helm
     type: app-of-apps
 spec:
-  project: default
+  project: nodefront
   source:
     repoURL: https://github.com/rodmhgl/nodefront.git
     targetRevision: main
@@ -23,6 +25,7 @@ spec:
       allowEmpty: false
     syncOptions:
       - CreateNamespace=true
+      - Replace=true  # Force replace to ensure project field is updated
     retry:
       limit: 5
       backoff:

@@ -20,7 +20,7 @@ ingress:
   enabled: true
   className: "nginx"
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-nonprod-dns"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod-dns"
     nginx.ingress.kubernetes.io/rewrite-target: /
   hosts:
     - host: myapp-development.azurelaboratory.com

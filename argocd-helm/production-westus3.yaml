@@ -3,13 +3,15 @@ kind: Application
 metadata:
   name: nodefront-helm-production-westus3
   namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
   labels:
     app: nodefront
     deployment-method: helm
     environment: production
     region: westus3
 spec:
-  project: default
+  project: nodefront
   source:
     repoURL: https://github.com/rodmhgl/nodefront.git
     targetRevision: main
