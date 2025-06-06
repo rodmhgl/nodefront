@@ -200,7 +200,7 @@ def get_image_info():
     return {
         "tag": os.environ.get("IMAGE_TAG", "unknown"),
         "repository": "rodstewart/nodefront",
-        "full_image": f"rodstewart/nodefront:{os.environ.get('IMAGE_TAG', 'unknown')}"
+        "full_image": f"rodstewart/nodefront:{os.environ.get('IMAGE_TAG', 'unknown')}",
     }
 
 
@@ -253,7 +253,7 @@ def get_environment_info():
             env_vars[key] = value
 
     image_info = get_image_info()
-    
+
     return {
         "kubernetes": {
             "pod_name": os.environ.get("POD_NAME", "unknown"),
