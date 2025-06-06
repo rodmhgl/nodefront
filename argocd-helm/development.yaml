@@ -16,9 +16,6 @@ spec:
     helm:
       valueFiles:
         - values/development.yaml
-      parameters:
-        - name: image.tag
-          value: develop-latest
   destination:
     server: https://kubernetes.default.svc
     namespace: development-helm

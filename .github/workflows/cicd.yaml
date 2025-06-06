@@ -139,16 +139,15 @@ jobs:
         uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
 
       - name: Update Development Environment
-        shell: bash
         run: |
           echo "Updating development to: ${{ needs.ci.outputs.docker_meta_version }}"
-          cd environments/development
-          sed -i "s|newTag: .*|newTag: ${{ needs.ci.outputs.docker_meta_version }}|" kustomization.yaml
-
+          yq -i ".image.tag = \"${{ needs.ci.outputs.docker_meta_version }}\"" helm/myapp/values/development.yaml
+      
       - name: Commit and push changes
-        uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5
+        uses: EndBug/add-and-commit@v9
         with:
-          message: 'Update image tag to ${{ needs.ci.outputs.docker_meta_version }}'
+          message: 'Update image tag in development to ${{ needs.ci.outputs.docker_meta_version }}'
+          add: 'helm/myapp/values/development.yaml'
 
       - name: Install ArgoCD CLI
         shell: bash
@@ -176,3 +175,28 @@ jobs:
         run: |
           app=nodefront-development
           argocd app list | grep -q argocd/$app || argocd app create $app -f argo-cd/applications/nodefront-development.yaml
+
+  update-environment:
+    needs: [ci, publish-chart]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: main
+
+      - name: Install yq
+        run: |
+          sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
+          sudo chmod +x /usr/bin/yq
+
+      - name: Update Development Environment Values
+        run: |
+          echo "Updating development image tag to: ${{ needs.ci.outputs.docker_meta_version }}"
+          yq -i '.image.tag = "${{ needs.ci.outputs.docker_meta_version }}"' helm/myapp/values/development.yaml
+      
+      - name: Commit and push changes
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: 'Update image tag in development to ${{ needs.ci.outputs.docker_meta_version }}'
+          add: 'helm/myapp/values/development.yaml'
