@@ -1,21 +1,76 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  labels:
-    app: nodefront
   name: nodefront
   namespace: argocd
+  labels:
+    app: nodefront
 spec:
-  clusterResourceWhitelist:
-  - group: '*'
-    kind: '*'
-  description: Node Frontend Flask Application Project
-  destinations:
-  - name: '*'
-    namespace: '*'
-    server: '*'
-  namespaceResourceWhitelist:
-  - group: '*'
-    kind: '*'
+  description: "Node Frontend Flask Application Project"
+  
+  # Source repositories
   sourceRepos:
-  - https://github.com/rodmhgl/nodefront.git
+    - 'https://github.com/rodmhgl/nodefront.git'  # Update with your repository URL
+  
+  # Allowed destinations
+  destinations:
+    # Development
+    - namespace: 'nodefront-dev'
+      server: 'https://kubernetes.default.svc'
+    # Staging
+    - namespace: 'nodefront-staging'
+      server: 'https://kubernetes.default.svc'
+    # Production
+    - namespace: 'nodefront-prod'
+      server: 'https://kubernetes.default.svc'
+  
+  # Cluster resource whitelist
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: 'Namespace'
+  
+  # Namespace resource whitelist
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'
+  
+  # Roles for RBAC
+  roles:
+    # Admin role - full access
+    - name: admin
+      policies:
+        - p, proj:nodefront:admin, applications, *, nodefront/*, allow
+        - p, proj:nodefront:admin, logs, get, nodefront/*, allow
+        - p, proj:nodefront:admin, exec, create, nodefront/*, allow
+      groups:
+        - nodefront-admins
+    
+    # Developer role - read/sync but no delete
+    - name: developer
+      policies:
+        - p, proj:nodefront:developer, applications, get, nodefront/*, allow
+        - p, proj:nodefront:developer, applications, sync, nodefront/*, allow
+        - p, proj:nodefront:developer, logs, get, nodefront/*, allow
+      groups:
+        - nodefront-developers
+    
+    # Viewer role - read only
+    - name: viewer
+      policies:
+        - p, proj:nodefront:viewer, applications, get, nodefront/*, allow
+      groups:
+        - nodefront-viewers
+  
+  # Sync windows for production deployments
+  syncWindows:
+    - kind: allow
+      schedule: "0 6 * * 1-5"  # Allow syncs Monday-Friday 6AM UTC
+      duration: 12h
+      applications:
+        - "nodefront-production"
+      manualSync: true
+    - kind: deny
+      schedule: "* * * * *"    # Deny all other times for production
+      applications:
+        - "nodefront-production"
+      manualSync: false
