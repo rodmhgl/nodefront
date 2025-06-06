@@ -125,6 +125,15 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Extract SHA tag from Docker meta
+        id: extract_sha_tag
+        run: |
+          # Parse Docker meta JSON output to find SHA-based tag
+          echo '${{ steps.meta.outputs.json }}' | jq -r '.tags[] | select(contains("main-")) | split(":")[1]' | head -1 > sha_tag.txt
+          sha_tag=$(cat sha_tag.txt)
+          echo "Extracted SHA tag: $sha_tag"
+          echo "tag=$sha_tag" >> $GITHUB_OUTPUT
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
@@ -134,6 +143,7 @@ jobs:
 
     outputs:
       docker_meta_version: ${{ steps.meta.outputs.version }}
+      docker_sha_tag: ${{ steps.extract_sha_tag.outputs.tag }}
 
   cd:
     needs: ci
@@ -151,11 +161,11 @@ jobs:
 
       - name: Update Development Environment Values
         run: |
-          echo "Updating development image tag to: ${{ needs.ci.outputs.docker_meta_version }}"
+          echo "Updating development image tag to: ${{ needs.ci.outputs.docker_sha_tag }}"
           
           # Get current tag
           current_tag=$(yq '.image.tag' helm/myapp/values/development.yaml)
-          new_tag="${{ needs.ci.outputs.docker_meta_version }}"
+          new_tag="${{ needs.ci.outputs.docker_sha_tag }}"
           
           echo "Current tag: $current_tag"
           echo "New tag: $new_tag"
@@ -170,6 +180,6 @@ jobs:
       - name: Commit and push changes
         uses: EndBug/add-and-commit@v9
         with:
-          message: 'Update image tag in development to ${{ needs.ci.outputs.docker_meta_version }}'
+          message: 'Update image tag in development to ${{ needs.ci.outputs.docker_sha_tag }}'
           add: 'helm/myapp/values/development.yaml'
           default_author: github_actions
