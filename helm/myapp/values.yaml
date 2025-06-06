@@ -6,7 +6,7 @@ replicaCount: 1
 
 image:
   repository: rodstewart/nodefront
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   tag: ""
 
 nameOverride: ""
