@@ -14,14 +14,21 @@ spec:
   
   # Allowed destinations
   destinations:
+    # Argo CD Applications
+    - namespace: 'argocd'
+      server: 'https://kubernetes.default.svc'
     # Development
-    - namespace: 'nodefront-dev'
+    - namespace: 'development-helm'
       server: 'https://kubernetes.default.svc'
     # Staging
-    - namespace: 'nodefront-staging'
+    - namespace: 'staging-eastus-helm'
+      server: 'https://kubernetes.default.svc'
+    - namespace: 'staging-westus3-helm'
       server: 'https://kubernetes.default.svc'
     # Production
-    - namespace: 'nodefront-prod'
+    - namespace: 'production-eastus-helm'
+      server: 'https://kubernetes.default.svc'
+    - namespace: 'production-westus3-helm'
       server: 'https://kubernetes.default.svc'
   
   # Cluster resource whitelist
@@ -61,16 +68,16 @@ spec:
       groups:
         - nodefront-viewers
   
-  # Sync windows for production deployments
-  syncWindows:
-    - kind: allow
-      schedule: "0 6 * * 1-5"  # Allow syncs Monday-Friday 6AM UTC
-      duration: 12h
-      applications:
-        - "nodefront-production"
-      manualSync: true
-    - kind: deny
-      schedule: "* * * * *"    # Deny all other times for production
-      applications:
-        - "nodefront-production"
-      manualSync: false
+  # # Sync windows for production deployments
+  # syncWindows:
+  #   - kind: allow
+  #     schedule: "0 6 * * 1-5"  # Allow syncs Monday-Friday 6AM UTC
+  #     duration: 12h
+  #     applications:
+  #       - "nodefront-production"
+  #     manualSync: true
+  #   - kind: deny
+  #     schedule: "* * * * *"    # Deny all other times for production
+  #     applications:
+  #       - "nodefront-production"
+  #     manualSync: false
