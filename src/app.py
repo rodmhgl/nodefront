@@ -195,6 +195,15 @@ def get_process_info():
         }
 
 
+def get_image_info():
+    """Get container image information"""
+    return {
+        "tag": os.environ.get("IMAGE_TAG", "unknown"),
+        "repository": "rodstewart/nodefront",
+        "full_image": f"rodstewart/nodefront:{os.environ.get('IMAGE_TAG', 'unknown')}"
+    }
+
+
 def get_server_info():
     """Get production server information"""
     return {
@@ -243,6 +252,8 @@ def get_environment_info():
         else:
             env_vars[key] = value
 
+    image_info = get_image_info()
+    
     return {
         "kubernetes": {
             "pod_name": os.environ.get("POD_NAME", "unknown"),
@@ -259,6 +270,7 @@ def get_environment_info():
             "pid": process_info["pid"],
             "ppid": process_info["ppid"],
         },
+        "image": image_info,
         "server": server_info,
         "system": {
             "hostname": socket.gethostname(),
@@ -500,6 +512,8 @@ def index():
                     <h3>📊 Application Status</h3>
                     <div class="info-item">
                         <div><span class="label">Environment:</span><span class="value">{{ environment }}</span></div>
+                        <div><span class="label">Image Tag:</span><span class="value">{{ image_tag }}</span></div>
+                        <div><span class="label">Container Image:</span><span class="value">{{ full_image }}</span></div>
                         <div><span class="label">Uptime:</span><span class="value">{{ uptime }} seconds</span></div>
                         <div><span class="label">Python Version:</span><span class="value">{{ python_version }}</span></div>
                         <div><span class="label">Platform:</span><span class="value">{{ platform }}</span></div>
@@ -592,6 +606,10 @@ def index():
         "architecture": env_info["application"]["architecture"],
         "pid": env_info["application"]["pid"],
         "ppid": env_info["application"]["ppid"],
+        # Image info
+        "image_tag": env_info["image"]["tag"],
+        "image_repository": env_info["image"]["repository"],
+        "full_image": env_info["image"]["full_image"],
         # System info
         "hostname": env_info["system"]["hostname"],
         "cpu_count": env_info["system"]["cpu_count"],
@@ -628,6 +646,7 @@ def index():
 def api_env():
     """API endpoint for JSON environment data"""
     server_info = get_server_info()
+    image_info = get_image_info()
 
     return jsonify(
         {
@@ -635,6 +654,7 @@ def api_env():
             "bg_color": os.environ.get("BG_COLOR", "#1e3a8a"),
             "font_color": os.environ.get("FONT_COLOR", "#ffffff"),
             "server": server_info,
+            "image": image_info,
             "kubernetes": {
                 "pod_name": os.environ.get("POD_NAME", "unknown"),
                 "pod_namespace": os.environ.get("POD_NAMESPACE", "unknown"),
