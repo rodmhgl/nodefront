@@ -10,7 +10,7 @@ metadata:
     deployment-method: helm
     environment: development
 spec:
-  project: nodefront
+  project: default
   source:
     repoURL: https://github.com/rodmhgl/nodefront.git
     targetRevision: main
