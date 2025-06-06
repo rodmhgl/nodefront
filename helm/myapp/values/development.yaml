@@ -8,7 +8,7 @@ debug: "true"
 logLevel: DEBUG
 sdlc: development
 image:
-  tag: main
+  tag: main-e000970
 replicaCount: 1
 gunicorn:
   workers: "1"
