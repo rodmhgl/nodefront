@@ -29,7 +29,7 @@ ingress:
   enabled: true
   className: "nginx"
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod-dns"
+    cert-manager.io/cluster-issuer: "letsencrypt-nonprod-dns"
     nginx.ingress.kubernetes.io/rewrite-target: /
   tls:
     - secretName: myapp-tls
