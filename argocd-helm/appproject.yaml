@@ -1,83 +1,78 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: nodefront
-  namespace: argocd
   labels:
     app: nodefront
+  name: nodefront
+  namespace: argocd
 spec:
-  description: "Node Frontend Flask Application Project"
-  
-  # Source repositories
-  sourceRepos:
-    - 'https://github.com/rodmhgl/nodefront.git'  # Update with your repository URL
-  
-  # Allowed destinations
-  destinations:
-    # Argo CD Applications
-    - namespace: 'argocd'
-      server: 'https://kubernetes.default.svc'
-    # Development
-    - namespace: 'development-helm'
-      server: 'https://kubernetes.default.svc'
-    # Staging
-    - namespace: 'staging-eastus-helm'
-      server: 'https://kubernetes.default.svc'
-    - namespace: 'staging-westus3-helm'
-      server: 'https://kubernetes.default.svc'
-    # Production
-    - namespace: 'production-eastus-helm'
-      server: 'https://kubernetes.default.svc'
-    - namespace: 'production-westus3-helm'
-      server: 'https://kubernetes.default.svc'
-  
-  # Cluster resource whitelist
   clusterResourceWhitelist:
-    - group: '*'
-      kind: 'Namespace'
-  
-  # Namespace resource whitelist
+  - group: '*'
+    kind: 'Namespace'
+  - group: '*'
+    kind: 'PersistentVolumeClaim'
+  - group: '*'
+    kind: 'PersistentVolume'
+  - group: '*'
+    kind: 'Pod'
+  - group: '*'
+    kind: 'SecretProviderClass'
+  description: Node Frontend Flask Application Project
+  destinations:
+  - namespace: argocd
+    server: https://kubernetes.default.svc
+    name: 'in-cluster'
+  - namespace: development-helm
+    server: https://kubernetes.default.svc
+    name: 'in-cluster'
+  - namespace: staging-eastus-helm
+    server: https://kubernetes.default.svc
+    name: 'in-cluster'
+  - namespace: staging-westus3-helm
+    server: https://kubernetes.default.svc
+    name: 'in-cluster'
+  - namespace: production-eastus-helm
+    server: https://kubernetes.default.svc
+    name: 'in-cluster'
+  - namespace: production-westus3-helm
+    server: https://kubernetes.default.svc
+    name: 'in-cluster'
   namespaceResourceWhitelist:
-    - group: '*'
-      kind: '*'
-  
-  # Roles for RBAC
+  - group: '*'
+    kind: 'PersistentVolume'
+  - group: '*'
+    kind: 'Pod'
+  - group: '*'
+    kind: 'SecretProviderClass'
+  - group: '*'
+    kind: 'Service'
+  - group: '*'
+    kind: 'Deployment'
+  - group: '*'
+    kind: 'ConfigMap'
+  - group: '*'
+    kind: 'HorizontalPodAutoscaler'
+  - group: '*'
+    kind: 'Ingress'
   roles:
-    # Admin role - full access
-    - name: admin
-      policies:
-        - p, proj:nodefront:admin, applications, *, nodefront/*, allow
-        - p, proj:nodefront:admin, logs, get, nodefront/*, allow
-        - p, proj:nodefront:admin, exec, create, nodefront/*, allow
-      groups:
-        - nodefront-admins
-    
-    # Developer role - read/sync but no delete
-    - name: developer
-      policies:
-        - p, proj:nodefront:developer, applications, get, nodefront/*, allow
-        - p, proj:nodefront:developer, applications, sync, nodefront/*, allow
-        - p, proj:nodefront:developer, logs, get, nodefront/*, allow
-      groups:
-        - nodefront-developers
-    
-    # Viewer role - read only
-    - name: viewer
-      policies:
-        - p, proj:nodefront:viewer, applications, get, nodefront/*, allow
-      groups:
-        - nodefront-viewers
-  
-  # # Sync windows for production deployments
-  # syncWindows:
-  #   - kind: allow
-  #     schedule: "0 6 * * 1-5"  # Allow syncs Monday-Friday 6AM UTC
-  #     duration: 12h
-  #     applications:
-  #       - "nodefront-production"
-  #     manualSync: true
-  #   - kind: deny
-  #     schedule: "* * * * *"    # Deny all other times for production
-  #     applications:
-  #       - "nodefront-production"
-  #     manualSync: false
+  - groups:
+    - nodefront-admins
+    name: admin
+    policies:
+    - p, proj:nodefront:admin, applications, *, nodefront/*, allow
+    - p, proj:nodefront:admin, logs, get, nodefront/*, allow
+    - p, proj:nodefront:admin, exec, create, nodefront/*, allow
+  - groups:
+    - nodefront-developers
+    name: developer
+    policies:
+    - p, proj:nodefront:developer, applications, get, nodefront/*, allow
+    - p, proj:nodefront:developer, applications, sync, nodefront/*, allow
+    - p, proj:nodefront:developer, logs, get, nodefront/*, allow
+  - groups:
+    - nodefront-viewers
+    name: viewer
+    policies:
+    - p, proj:nodefront:viewer, applications, get, nodefront/*, allow
+  sourceRepos:
+  - https://github.com/rodmhgl/nodefront.git
